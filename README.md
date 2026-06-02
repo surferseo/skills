@@ -1,6 +1,6 @@
 # Surfer Skills
 
-[Agent Skills](https://agentskills.io) for working with [Surfer](https://surferseo.com) — content workflows built on top of the Surfer REST API.
+[Agent Skills](https://agentskills.io) for working with [Surfer](https://surferseo.com) — transport-agnostic content workflows backed by a capability contract and pluggable transport adapters (REST today; the structure is ready for additional transports).
 
 Install with the [`skills`](https://skills.sh) CLI:
 
@@ -8,13 +8,21 @@ Install with the [`skills`](https://skills.sh) CLI:
 # everything
 npx skills add surferseo/skills
 
-# or pick specific skills
-npx skills add surferseo/skills --skill surfer-write-article --skill surfer-api
+# or a workflow + the contract + at least one adapter
+npx skills add surferseo/skills --skill surfer-write-article --skill surfer-capabilities --skill surfer-api
 ```
+
+A workflow on its own can't do anything — it needs the **capability contract** (`surfer-capabilities`) plus **at least one transport adapter** (e.g. `surfer-api`). The skills spec has no hard dependency mechanism, so this co-install is a **convention**, not something enforced for you. `npx skills add surferseo/skills` (no `--skill`) sidesteps it by installing everything.
 
 ## How it's organized
 
-Two layers. **Workflow skills are the entrypoints** — start there. They each encode a playbook for a real Surfer job and delegate the actual API calls to a **transport skill**.
+Three layers:
+
+1. **Workflow skills** — the entrypoints. Each is a transport-agnostic playbook for a real Surfer job. Start here.
+2. **`surfer-capabilities`** — the transport-neutral capability **contract** every workflow draws from: stable capability IDs plus the async/poll semantics that govern them.
+3. **Transport adapters** — bind capability IDs to a concrete transport: `surfer-api` (REST) today. New transports plug in as additional adapters without touching workflows.
+
+Workflows reference **capability IDs only** — never a transport, endpoint, or URL. Whichever adapter is installed and active executes those IDs. Add or swap a transport adapter and the workflows run unchanged.
 
 ### Workflow skills — *what you want to do*
 
@@ -26,13 +34,19 @@ Two layers. **Workflow skills are the entrypoints** — start there. They each e
 | `surfer-ai-search` | Optimize content for AI-search / LLM visibility (AIO) |
 | `surfer-detect-humanize` | Detect AI-written text and humanize it |
 
-### Transport skills — *how the calls are made*
+### Capability contract — *what can be done*
 
 | Skill | What it is |
 |---|---|
-| `surfer-api` | The Surfer REST API: auth, conventions, and a capability → endpoint map. Fetches live docs for exact request/response shapes. |
+| `surfer-capabilities` | The transport-neutral contract: capability IDs and their async/poll semantics. Every workflow targets these IDs; every adapter implements them. |
 
-> An MCP transport (`surfer-mcp`) is planned. Workflow skills are transport-agnostic and will work with it unchanged.
+### Transport adapters — *how the calls are made*
+
+| Skill | What it is |
+|---|---|
+| `surfer-api` | REST adapter. Maps capability IDs to the Surfer REST API: auth, conventions, endpoints. Fetches live docs for exact request/response shapes. |
+
+> New transports plug in here as additional adapters — each implements the same capability contract, so workflows (and the contract) work with them unchanged.
 
 ## Always up to date
 

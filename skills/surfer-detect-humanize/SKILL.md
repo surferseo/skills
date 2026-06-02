@@ -13,9 +13,10 @@ license: MIT
 Score how likely text is AI-generated, then paraphrase it to read human and re-score to confirm. Use for a probability check, a rewrite, or both.
 
 ## Prerequisites
+- **Capabilities & transport.** Each step names a Surfer capability ID (e.g. `ai_detector.detect`); none names a transport. At the first execution step, resolve the *active Surfer transport* (an adapter actually usable this session — not just files in a checkout). Exactly one usable → use it; several with none pinned → the default; **none usable → stop and ask the user which Surfer transport to install or use, and never improvise raw HTTP or assume an endpoint.** Don't mistake a missing credential for a missing transport. The active adapter owns auth, conventions, async waits, errors, idempotency, and pre-call doc/schema lookup; resolution rules and async/poll semantics live in `surfer-capabilities`.
 - Plain text input. If the user points at a URL, file, or Content Editor, extract the text first — both ops take raw text, not an editor id.
 - Both are **v1**, **synchronous** (no webhook/poll), and require a `model`: `surfer-ai-detector-v1` for detect, `surfer-humanizer-v1` for humanize.
-- `ai_detector.detect` is not workspace-scoped; `humanizer.humanize` is. Pass its `Workspace-Id` only when the user names a workspace or a quota error suggests another has allowance (resolve via `workspace.list`).
+- `ai_detector.detect` is not workspace-scoped; `humanizer.humanize` is. Scope it to a specific workspace only when the user names one or a quota error suggests another has allowance (resolve via `workspace.list`).
 
 ## Playbook
 
@@ -32,6 +33,3 @@ Score how likely text is AI-generated, then paraphrase it to read human and re-s
 ## Gotchas
 - A quota-or-access error on either op means the allowance is spent or the plan lacks the feature — surface it and stop; never retry in a loop.
 - Route SEO scoring to **surfer-optimize-content** and AI-search visibility to **surfer-ai-search**; neither belongs here.
-
-## Calling Surfer
-Execute every call through **surfer-api**. Fetch the live doc it points to for `ai_detector.detect` and `humanizer.humanize` before calling.

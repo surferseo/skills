@@ -1,35 +1,51 @@
 ---
 name: surfer-api
 description: >-
-  Use when calling the Surfer SEO REST API directly, when a surfer-* workflow skill needs to
-  execute its API calls, or when the user mentions the Surfer API, an API key, a workspace_id, a
-  v1/v2 endpoint or path, webhooks, rate limits, idempotency, or pagination.
+  Surfer's REST adapter — today the default Surfer transport. Use to execute any Surfer capability
+  over REST, when a surfer-* workflow needs to execute its calls, or when the user mentions the
+  Surfer API, an API key, a workspace_id, a v1/v2 endpoint or path, webhooks, rate limits,
+  idempotency, or pagination. Capability IDs and their neutral async/poll semantics live in
+  surfer-capabilities; this skill is how those run over HTTP. An explicit transport pin (e.g.
+  /surfer-api) always takes precedence.
 license: MIT
 ---
 
-# Surfer API (transport)
+# Surfer API (REST adapter)
 
 ## Overview
 
-The REST transport for Surfer SEO: how to authenticate and call the API, the always-on
-conventions every call obeys, and the **capability map** binding each shared capability ID
-to its REST method+path. The `surfer-*` workflow skills decide *what* to call and in what
-order; this skill is *how*, and is the single source for the conventions below.
+Surfer's pure REST adapter. It covers how to authenticate and call the API, the always-on
+REST conventions every HTTP call obeys, and the **capability map** binding each shared
+capability ID to its REST method+path. The `surfer-*` workflow skills decide *what* to call
+and in what order; this skill is *how* over HTTP. REST is the **current default** Surfer
+transport; per `surfer-capabilities` §4 an explicit transport pin always wins, and new
+transport adapters can be added later without changing workflows.
+
+Capability IDs and their neutral async/poll semantics are defined in
+`surfer-capabilities/ports.md`; this skill binds each ID to its REST method+path in
+`capability-map.md`. The transport-neutral contract (which ops are async, which webhook
+events they emit, how to poll for terminal state) is owned by `surfer-capabilities`, not
+here — this adapter restates only the REST-specific mechanics of executing those ops.
 
 ## Prerequisites
 
 1. **Get an API key** from the Surfer app (organization API settings).
 2. **Send `API-KEY: <key>`** on every authenticated request (some ops are public — see
-   the map's notes, e.g. `locations.list`).
+   the map's notes, e.g. `locations.list`). **If no API key is configured, stop and ask the
+   user for it before the first authenticated call — never fabricate one or fire a blind
+   request.** (This is a credential gate, separate from transport resolution: only reach it
+   once a transport is already resolved.)
 3. **Resolve a workspace_id.** Most v2 resources are workspace-scoped. List with
    `workspace.list` (`GET /api/v2/workspaces`) and use one whose `state` is `active` (only
    active workspaces can manage resources). If exactly one is active, use it. If several
    are active, the caller must supply `workspace_id` — do not guess. If none are active,
    stop and report (no resource ops are possible).
 
-## Conventions (always on — single source)
+## REST conventions (always on)
 
-Hold for every Surfer call. Workflow skills assume these and never restate them.
+These are the REST-specific mechanics every HTTP call to Surfer obeys; they are local to this
+adapter. (Transport-neutral semantics — async/webhook/poll — live in
+`surfer-capabilities/ports.md`.) Workflow skills assume these and never restate them.
 
 **Authentication.** Send `API-KEY: <key>` unless the op is explicitly public. Missing or
 invalid key -> `401 unauthorized`.
@@ -76,35 +92,21 @@ Credit-spending creates: `content_editor.create`, `ai_article.generate`, `auto_o
 `outline.regenerate`, `serp_analyzer.*`, `audit.create`. `quota_exceeded` (`422`) is **not
 retryable** — stop and report.
 
-**Async model (webhooks vs polling).** Async ops (Content Editor init, AI article
-generation, auto-optimize, SEO/AI-search scoring, outline regeneration, load-more
-competitors) return immediately in a non-terminal state and finish later.
+**Async transport (REST mechanics).** *Which* ops are async, the webhook events they emit,
+and the poll-via target / field / verified terminal values are the transport-neutral
+contract in `surfer-capabilities/ports.md` — cite it, do not restate it here. This adapter
+covers only how those play out over HTTP:
 
-- *Webhooks (for integrators).* Setup is **org-level**: expose an HTTPS endpoint that
+- *Webhook setup (for integrators).* Setup is **org-level**: expose an HTTPS endpoint that
   accepts POST and returns `200`, then have Surfer register it. Each delivery carries a
-  `Verification-Key` header and a JSON body naming a `content_editor.*` event. The
-  authoritative event set:
-  - `content_editor.initialization.completed` / `.failed`
-  - `content_editor.ai_article.completed` / `.waiting_for_user_input` / `.failed`
-  - `content_editor.seo_score.calculated` / `.failed`
-  - `content_editor.ai_search_score.calculated` / `.failed`
-  - `content_editor.content_score.recalculated`
-  - `content_editor.auto_optimize.completed` / `.failed` / `.cancelled`
-  - `content_editor.outline.completed` / `.failed`
-  - `content_editor.seo_guidelines.competitors.load_more.completed` / `.failed`
-- *Polling.* **If you are an agent executing calls directly (no persistent webhook
-  receiver you control), polling is your path** — the webhook bullet above is for
-  integrators. Poll the matching GET (see capability-map.md "Poll-via targets").
-
-**Terminal vocabulary differs by resource — never assume `completed`.** Confirm the field
-and success/failure values from the Live doc, but the verified mapping is:
-
-| Poll via | Field | Success | Notes |
-|---|---|---|---|
-| `content_editor.get` | `state` | `completed` | **No `failed` in the body** — init failure is only delivered via webhook; without one, a timeout is your only failure detector. |
-| `ai_article.get` | `state` | `completed` | Failure value `failed`; `waiting_for_user_input` pauses for outline review. |
-| `auto_optimize.get` | `state` (+`result`) | `completed` | `result` = `optimized` / `nothing_to_optimize`. |
-| `seo_guidelines.get_score` / `ai_search.get_score` | `status` | `ready` | Terminal-success is `ready` (not `completed`); `calculating` means keep polling. |
+  `Verification-Key` header and a JSON body naming the `content_editor.*` event (event set
+  per `ports.md`).
+- *Polling (for direct callers).* **If you are an agent executing calls directly (no
+  persistent webhook receiver you control), polling is your path** — the webhook bullet
+  above is for integrators. Poll the matching GET capability; resolve which GET, which
+  field, and the verified terminal values from `ports.md` (never assume the literal value
+  `completed` — terminal vocabulary differs by resource), then bind that GET to its
+  method+path via `capability-map.md`.
 
 **Bounded poll.** The API documents no timeout or interval. Start at 2-5s, back off
 exponentially capped at ~30-60s, and stop at a hard cap (max elapsed or max attempts);
@@ -121,9 +123,10 @@ no v2 equivalent exists yet (Audit, SERP Analyzer, AI Detector, Humanizer, Locat
 
 ## Capability map
 
-All 69 capability IDs — grouped, with REST method+path, workspace-scoping, async events,
-poll-via targets, and live doc — live in **capability-map.md** (sibling). Workflow skills
-reference these IDs, never raw paths; read it to resolve an ID to its endpoint.
+All 69 capability IDs — grouped, with REST method+path, workspace-scoping, and Live-doc URL
+— are bound in **capability-map.md** (sibling). That is the REST binding only; the neutral
+async/poll semantics for each ID live in `surfer-capabilities/ports.md`. Workflow skills
+reference IDs, never raw paths; read the map to resolve an ID to its endpoint.
 
 ## Standing rule: fetch the live doc before calling
 

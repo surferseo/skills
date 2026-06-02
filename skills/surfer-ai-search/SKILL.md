@@ -14,12 +14,13 @@ license: MIT
 Raise a page's Surfer AI Search score so generative answer engines (Google AI Overviews and AI Mode, Gemini, ChatGPT, Perplexity) are likelier to cite it; iterate to a target. For classic SEO content-score work hand off to surfer-optimize-content; to draft a new article, surfer-write-article.
 
 ## Prerequisites
+- **Capabilities & transport.** Each step names a Surfer capability ID (e.g. `content_editor.create`); none names a transport. At the first execution step, resolve the *active Surfer transport* (an adapter actually usable this session — not just files in a checkout). Exactly one usable → use it; several with none pinned → the default; **none usable → stop and ask the user which Surfer transport to install or use, and never improvise raw HTTP or assume an endpoint.** Don't mistake a missing credential for a missing transport. The active adapter owns auth, conventions, async waits, errors, idempotency, and pre-call doc/schema lookup; resolution rules and async/poll semantics live in `surfer-capabilities`.
 - An active `workspace_id` (resolve via `workspace.list` if unknown).
 - Either an existing Content Editor id, or content to bring in (a public URL to import, or raw text to push after creation).
 - A target AI Search score — ask the user; if none given, default to 70+ and say so.
 - If the user is unsure which keyword/location to target, hand off to surfer-serp-research first — facts and score are SERP/keyword-specific.
 
-Async waits below: poll the matching GET (webhook events usable only if a receiver is configured). On timeout or any `failed`/`error` state, report and stop — don't poll forever.
+Async waits below: an async op finishes via its named webhook event or a poll of the matching GET capability. On timeout or any `failed`/`error` state, report and stop — don't poll forever.
 
 ## Playbook
 
@@ -29,9 +30,6 @@ Async waits below: poll the matching GET (webhook events usable only if a receiv
 
 3. **Pull and interpret the facts** via `ai_search.get` (full payload incl. score) or `ai_search.get_facts` (facts only); they populate only when analysis `status` is `completed`. Each fact carries `sources[].url` and `cited_by` (`serp`, or a subset of `ai_mode`, `ai_overviews`, `gemini`, `openai`, `perplexity`). Report which facts the content covers, which it omits, and which are cited by AI engines (not just `serp`) — those cited by multiple AI engines are the highest-leverage gaps. Earn citations by covering them plainly, self-containedly, attributably.
 
-4. **Revise, then recompute.** Read current content with `content_editor.get_content`, write the improved version with `content_editor.update_content`; it requires `completed` state (a `409 conflict` means the editor isn't ready — wait, then retry) and auto-triggers AI Search (and SEO) recalculation. Re-fetch `content_editor.get_content` to see what was stored. Await `content_editor.ai_search_score.calculated`; on `.failed`, report and stop the loop.
+4. **Revise, then recompute.** Read current content with `content_editor.get_content`, write the improved version with `content_editor.update_content`; it requires `completed` state (an "editor not ready" / already-in-progress signal means the editor isn't ready — wait, then retry) and auto-triggers AI Search (and SEO) recalculation. Re-fetch `content_editor.get_content` to see what was stored. Await `content_editor.ai_search_score.calculated`; on `.failed`, report and stop the loop.
 
 5. **Iterate.** Re-pull facts (they shift as content changes), target the next uncovered or AI-cited ones, revise, recompute. Stop when the score reaches the target, the user is satisfied, the gain over the prior round is under ~1 point, or after ~3–4 rounds. Report the final score, delta from baseline, and what changed.
-
-## Calling Surfer
-Execute every capability through surfer-api. Before each call, fetch the relevant live AI Search / Content Editors doc it points to.

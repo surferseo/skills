@@ -14,7 +14,7 @@ license: MIT
 Turn a keyword or topic into a new, SEO-optimized draft. Use when the user wants Surfer to author fresh content; for improving existing content hand off to surfer-optimize-content.
 
 ## Prerequisites
-- Load surfer-api first — it owns auth, workspace scoping, the error table, rate-limit/429 backoff, idempotency, and the webhook-vs-poll model. This playbook names capability ids only.
+- **Capabilities & transport.** Each step names a Surfer capability ID (e.g. `content_editor.create`); none names a transport. At the first execution step, resolve the *active Surfer transport* (an adapter actually usable this session — not just files in a checkout). Exactly one usable → use it; several with none pinned → the default; **none usable → stop and ask the user which Surfer transport to install or use, and never improvise raw HTTP or assume an endpoint.** Don't mistake a missing credential for a missing transport. The active adapter owns auth, conventions, async waits, errors, idempotency, and pre-call doc/schema lookup; resolution rules and async/poll semantics live in `surfer-capabilities`.
 - An `active` `workspace_id` (`workspace.list` if unknown).
 - Inputs: `main_keyword` (required) plus up to 19 secondary keywords; `location` (default United States; validate via `locations.list`) and device (mobile default, or desktop). Optional: `target_word_count`, target SEO score, `manual_outline`, custom voice, template. If the user names no voice/template, pass none (Surfer uses the workspace-default voice and SERP-preselected template); call `custom_voice.list` / `content_template.list` / `surfer_content_template.list` only to resolve a specifically requested one.
 
@@ -34,7 +34,7 @@ Turn a keyword or topic into a new, SEO-optimized draft. Use when the user wants
 
 7. **Await completion.** Await `content_editor.ai_article.completed` (else poll `ai_article.get`). On `content_editor.ai_article.failed`, report it.
 
-8. **Read the result.** Fetch the draft with `content_editor.get_content` (Markdown via Accept header if wanted). Read the SEO score (0–100) via `seo_guidelines.get_score`; poll until `status: ready` (`calculating` means the value is stale) before reporting, and read the unified `content_score` via `content_editor.get`.
+8. **Read the result.** Fetch the draft with `content_editor.get_content` (request Markdown if wanted). Read the SEO score (0–100) via `seo_guidelines.get_score`; poll until `status: ready` (`calculating` means the value is stale) before reporting, and read the unified `content_score` via `content_editor.get`.
 
 9. **Iterate toward the target (SEO score).** Iterate only if the user gave a target; otherwise read-and-report. While the SEO score is below target: diff the draft against `get_terms` / `get_structure` / `get_topics_and_questions`, edit, and write back with `content_editor.update_content` (it sanitizes server-side — re-fetch `content_editor.get_content`). It triggers recalculation: await `content_editor.seo_score.calculated` or poll `seo_guidelines.get_score` until `status: ready` and `calculated_at` advances, then re-read. Cap at 3–5 rounds and stop on no gain between two recalculations. Report `content_score`; don't iterate on it. For hands-off lifting use surfer-optimize-content; for LLM visibility use surfer-ai-search.
 
@@ -43,6 +43,3 @@ Turn a keyword or topic into a new, SEO-optimized draft. Use when the user wants
 ## Gotchas
 - `ai_article.generate` may run before initialization finishes: the article waits in `new` until guidelines settle, then proceeds (or `failed` if they never complete).
 - `content_editor.update_content` recalculates both scores; `content_editor.content_score.recalculated` fires only after SEO and AI Search both settle.
-
-## Calling Surfer
-Execute every capability via surfer-api. Before each call, fetch that capability's live doc for exact params and response fields.

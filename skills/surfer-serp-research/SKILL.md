@@ -14,17 +14,17 @@ license: MIT
 Analyze the live SERP for one or many keywords in a location, then turn the top-ranking competitors, common terms, and structural norms into a content brief. Use before writing; not for drafting the article.
 
 ## Prerequisites
-- An API key is required for every call except `locations.list` (see surfer-api).
-- The SERP Analyzer is v1 and workspace-scoped via the `Workspace-Id` header (defaults to the org's oldest active workspace). To target a specific workspace, resolve an active id via `workspace.list` first.
+- **Capabilities & transport.** Each step names a Surfer capability ID (e.g. `content_editor.create`); none names a transport. At the first execution step, resolve the *active Surfer transport* (an adapter actually usable this session — not just files in a checkout). Exactly one usable → use it; several with none pinned → the default; **none usable → stop and ask the user which Surfer transport to install or use, and never improvise raw HTTP or assume an endpoint.** Don't mistake a missing credential for a missing transport. The active adapter owns auth, conventions, async waits, errors, idempotency, and pre-call doc/schema lookup; resolution rules and async/poll semantics live in `surfer-capabilities`.
+- The SERP Analyzer is workspace-scoped and defaults to the org's oldest active workspace. To target a specific workspace, resolve an active id via `workspace.list` first.
 
 ## Playbook
 
-1. **Confirm keyword(s), location, device.** Validate the location against `locations.list` (public, no key; returns display-name strings like "United States"); it is paginated, so page through it before concluding a location is unavailable. If the location isn't listed, pick the closest and say so. Device defaults to `mobile`.
+1. **Confirm keyword(s), location, device.** Validate the location against `locations.list` (returns display-name strings like "United States"); it is paginated, so page through it before concluding a location is unavailable. If the location isn't listed, pick the closest and say so. Device defaults to `mobile`.
 
 2. **Submit the analysis.**
    - One keyword: `serp_analyzer.analyze` → `{ id, state: scheduled }`.
    - Many keywords: `serp_analyzer.analyze_batch` → array of `{ id, state }`; per-item rejects come back inline as `{ error, input }`. Retry transient rejects (e.g. `rate_limit_exceeded`); treat `quota_exceeded`/`validation_error` as terminal and report them.
-   - Capture every returned `id`, plus the `Workspace-Id` you submitted under.
+   - Capture every returned `id`, plus the workspace you submitted under.
 
 3. **Await completion.** No SERP-Analyzer webhooks exist, so poll `serp_analyzer.list` (a workspace-wide CSV of recent queries; match rows by the `id`s from step 2) with backoff and an overall timeout (e.g. ~10 min). A query is terminal at top-level `state` `completed` (list states: `scheduled`, `completed`). When every captured `id` is terminal or times out, proceed to step 4 with the `completed` subset; if none completed, stop and report the failures/quota issues.
 
@@ -39,6 +39,3 @@ Analyze the live SERP for one or many keywords in a location, then turn the top-
    *Optional richer brief (only if the user explicitly wants it):* For Surfer's curated, scored guidelines (term ranges, topics & questions, per-factor structural targets), create a Content Editor via `content_editor.create` and wait for state `completed` — relevant event `content_editor.initialization.completed`, else poll `content_editor.get`. If it reaches `failed`, fall back to the inline brief above. Then read `seo_guidelines.get_competitors`, `seo_guidelines.get_terms`, `seo_guidelines.get_topics_and_questions`, `seo_guidelines.get_structure` (all require `completed`).
 
 7. **Hand off.** To produce a draft, hand off to **surfer-write-article** with the keyword, location, and brief. To improve existing content, point to **surfer-optimize-content**. For AI-search / LLM visibility on the same keyword, point to **surfer-ai-search**.
-
-## Calling Surfer
-Run every capability through **surfer-api**; fetch the live doc it points to for exact request/response shapes before each call.
