@@ -3,10 +3,12 @@ name: surfer-create-content-brief
 description: >-
   Use when the user wants a writer-ready content brief grounded in Surfer's SEO and AI Search
   guidance. Triggers include "make a content brief", "brief a writer for this keyword", "what should
-  an article cover", and "give me an SEO and AI Search brief". It creates or reuses a manual Content
-  Editor and assembles its outline, SEO guidelines, and source-attributed AI Search facts into a
-  concise brief. For an outline alone, use surfer-create-outline. For an article draft, use
-  surfer-write-article.
+  an article cover", and "give me an SEO and AI Search brief". Also use it for SERP or competitor
+  research with no draft, such as "analyze the SERP for this keyword" or "what do the top-ranking
+  pages cover". It reports the SERP-derived competitors, structure, terms, and questions without
+  writing anything. It creates or reuses a manual Content Editor and assembles its outline, SEO
+  guidelines, and source-attributed AI Search facts into a concise brief. For an outline alone, use
+  surfer-create-outline. For an article draft, use surfer-write-article.
 ---
 
 # Surfer: Create a Content Brief

@@ -17,19 +17,25 @@ description: >-
 Turn a chosen, site-level recommendation into one Content Editor workflow, without accidentally
 creating it twice or publishing an unreviewed change.
 
-## Capability boundary
+## Extension capabilities
 
-`surfer-capabilities` registers these capability IDs as extensions:
+This workflow runs on capabilities that are not MCP tools or REST endpoints yet, so no transport
+binds them today. This skill owns their contract. Before every extension stage, ask the active
+transport whether it supports the exact capability. If it does not, report the unavailable stage.
+Then either stop or continue with the subset the user approved. Do not treat `surfer-api` as an
+implementation of these IDs.
 
-| Stage | Capability IDs |
-|---|---|
-| Create and brand a workspace | `workspace__create`, `brand_knowledge__get`, `brand_knowledge__update` |
-| Select and launch work | `recommendation__list`, `recommendation__execute` |
-| Finalize content | `internal_link__suggest`, `internal_link__apply`, `wordpress__list_destinations`, `wordpress__publish` |
-
-Before every extension stage, ask the active transport whether it supports the exact capability. If
-it does not, report the unavailable stage. Then either stop or continue with the subset the user
-approved. Do not treat `surfer-api` as an implementation of these extension IDs.
+| Capability ID | Contract | Safety requirement |
+|---|---|---|
+| `workspace__create` | Create a branded workspace from a name, site or GSC context, location, language, and members. Return its active `workspace_id`. | Require the user to choose the organization and site context. |
+| `brand_knowledge__get` | Return the single brand profile for a workspace and whether it is usable. | Read-only. Do not infer its text from `use_brand_knowledge`. |
+| `brand_knowledge__update` | Replace or patch the approved profile. Return the effective version. | Show the material change before writing it. |
+| `recommendation__list` | Return actionable site recommendations filtered by `optimize` or `write`, each with a stable id, rationale, priority, and URL or keyword context. | Read-only. Do not silently select one. |
+| `recommendation__execute` | Start the chosen recommendation. Return its accepted action, plus a `content_editor_id` when one was created. | Treat it as credit-spending if it creates an editor. Never create a duplicate editor. |
+| `internal_link__suggest` | Return candidate internal links with source page, target, anchor, location, and rationale. | Require connected site or GSC context. Make no content change. |
+| `internal_link__apply` | Apply only selected link suggestions to a named Content Editor. | Present the exact changes and require approval immediately before applying. |
+| `wordpress__list_destinations` | Return connected WordPress sites and writable post or page destinations. | Read-only. Do not expose or inspect credentials. |
+| `wordpress__publish` | Export a named editor's canonical content to a WordPress draft, an existing item, or a live item. Return its URL and status. | Default to a new draft. Require final explicit confirmation before a live publish or before updating an existing published item. |
 
 ## Playbook
 

@@ -19,7 +19,7 @@ A workflow on its own can't do anything. It needs the **capability contract**, `
 Three layers:
 
 1. **Workflow skills** are the entrypoints. Each is a transport-agnostic playbook for a real Surfer job. Start here.
-2. **`surfer-capabilities`** is the transport-neutral **contract**. It holds the capability IDs, which are the MCP server's tool names. It also holds the workspace, idempotency, and async principles, the transport-selection rules, and the registry of not-yet-built extension capabilities. It does not restate what each ID does. That comes from the active transport.
+2. **`surfer-capabilities`** is the transport-neutral **contract**. It fixes the capability IDs (the MCP server's tool names), picks the transport that runs them, and defines the normalized outcome vocabulary both transports report in. It does not restate what each ID does; that comes from the active transport.
 3. **Transports** are where an ID becomes a real call. The **Surfer MCP server** is primary. Its tools are the IDs and carry their own descriptions. **`surfer-api`** is secondary. It maps each ID to a REST method and path and owns the REST async and poll mechanics.
 
 Workflows reference **capability IDs only**, never a transport, endpoint, or URL. Whichever transport is connected executes those IDs, and the workflows run unchanged over either.
@@ -39,12 +39,13 @@ Workflows reference **capability IDs only**, never a transport, endpoint, or URL
 
 | Skill | What it is |
 |---|---|
-| `surfer-capabilities` | The transport-neutral contract: the capability IDs, which are the Surfer MCP server's tool names, plus the always-on principles, the transport-selection rules, and the extension-capability registry. It does not restate per-ID semantics. |
+| `surfer-capabilities` | The transport-neutral contract: the capability IDs (the Surfer MCP server's tool names), transport selection, and the normalized outcome vocabulary. It does not restate per-ID semantics. |
 
 `surfer-capabilities/content-workflows.md` adds the shared setup vocabulary for brand knowledge,
-templates, instructions, and competitors. It also registers the extension capabilities behind the
-full workflow: workspace setup, recommendations, internal linking, and WordPress publishing. Those
-IDs are not tools yet. A transport must explicitly support one before it can run.
+templates, instructions, and competitors. The extension capabilities behind the full workflow
+(workspace setup, recommendations, internal linking, and WordPress publishing) are owned by
+`surfer-content-recommendations`. Those IDs are not tools yet, so a transport must support one before
+it can run.
 
 ### Transports — *how the calls are made*
 

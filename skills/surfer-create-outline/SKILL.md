@@ -6,8 +6,8 @@ description: >-
   outline", and "outline an article before writing". It creates or reuses a Content Editor in
   manual-writing mode, returns its SEO-oriented outline, and can verify the requested brand,
   template, instructions, and competitor choices. For a writer-ready plan that also includes AI
-  Search facts, use surfer-create-content-brief. For a complete AI-written draft, use
-  surfer-write-article.
+  Search facts, or for SERP or competitor research with no deliverable, use
+  surfer-create-content-brief. For a complete AI-written draft, use surfer-write-article.
 ---
 
 # Surfer: Create an Optimized Outline
