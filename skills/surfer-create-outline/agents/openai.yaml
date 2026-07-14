@@ -1,0 +1,4 @@
+interface:
+  display_name: "Create Surfer Outline"
+  short_description: "Build a SERP-optimized content outline"
+  default_prompt: "Use $surfer-create-outline to create a SERP-optimized outline for [keyword]."

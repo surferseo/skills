@@ -28,9 +28,13 @@ Workflows reference **capability IDs only** — never a transport, endpoint, or 
 
 | Skill | Use it to… |
 |---|---|
-| `surfer-write-article` | Turn a keyword/topic into an SEO-optimized draft, end to end |
-| `surfer-optimize-content` | Improve existing content toward a target SEO score |
+| `surfer-write-article` | Turn a keyword/topic into a Surfer AI draft with SEO/AI analysis |
+| `surfer-optimize-content` | Improve existing content for SEO, AI Search, or both |
 | `surfer-serp-research` | Analyze the SERP / keywords and plan content |
+| `surfer-create-outline` | Build a Surfer-derived, SERP-informed article outline |
+| `surfer-create-content-brief` | Build a writer-ready SEO and AI Search content brief |
+| `surfer-manage-content-templates` | Create and manage reusable content templates |
+| `surfer-content-recommendations` | Turn site recommendations into write/optimize workflows |
 | `surfer-ai-search` | Optimize content for AI-search / LLM visibility (AIO) |
 | `surfer-detect-humanize` | Detect AI-written text and humanize it |
 
@@ -40,6 +44,11 @@ Workflows reference **capability IDs only** — never a transport, endpoint, or 
 |---|---|
 | `surfer-capabilities` | The transport-neutral contract: capability IDs and their async/poll semantics. Every workflow targets these IDs; every adapter implements them. |
 
+`surfer-capabilities/content-workflows.md` adds the shared setup vocabulary for brand knowledge,
+templates, instructions, competitors, and score snapshots. It also registers the extension
+capabilities behind full workspace/recommendation/internal-link/WordPress workflows. Those IDs are
+not falsely exposed by REST: an app/MCP adapter must explicitly support them before they can run.
+
 ### Transport adapters — *how the calls are made*
 
 | Skill | What it is |
@@ -47,6 +56,12 @@ Workflows reference **capability IDs only** — never a transport, endpoint, or 
 | `surfer-api` | REST adapter. Maps capability IDs to the Surfer REST API: auth, conventions, endpoints. Fetches live docs for exact request/response shapes. |
 
 > New transports plug in here as additional adapters — each implements the same capability contract, so workflows (and the contract) work with them unchanged.
+
+The current REST adapter runs the outline, brief, template, writing, and optimization parts of the
+workflows. It does not run workspace creation, Brand Knowledge profile management, site
+recommendations, internal linking, or WordPress publishing; `surfer-content-recommendations`
+reports that boundary and can continue only with a connected adapter that implements those
+extensions.
 
 ## Always up to date
 

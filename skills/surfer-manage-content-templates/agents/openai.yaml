@@ -1,0 +1,4 @@
+interface:
+  display_name: "Manage Surfer Templates"
+  short_description: "Create and manage Surfer content templates"
+  default_prompt: "Use $surfer-manage-content-templates to create a reusable content template."

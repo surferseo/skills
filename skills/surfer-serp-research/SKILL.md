@@ -3,15 +3,16 @@ name: surfer-serp-research
 description: >-
   Use when the user wants to analyze the SERP or research keywords with Surfer to plan content
   before writing — e.g. "analyze the SERP for X", "what do the top-ranking pages cover", "run the
-  SERP analyzer", "competitor terms for this keyword", "build a content brief". Not for writing the
-  article itself (use surfer-write-article).
+  SERP analyzer", "competitor terms for this keyword", or "build a SERP research brief". Not for
+  a Surfer Content Editor brief with SEO and AI Search guidance (use surfer-create-content-brief)
+  or writing the article itself (use surfer-write-article).
 license: MIT
 ---
 
 # Surfer SERP Research
 
 ## Overview
-Analyze the live SERP for one or many keywords in a location, then turn the top-ranking competitors, common terms, and structural norms into a content brief. Use before writing; not for drafting the article.
+Analyze the live SERP for one or many keywords in a location, then turn the top-ranking competitors, common terms, and structural norms into a lightweight research brief. Use before writing; not for drafting the article.
 
 ## Prerequisites
 - **Capabilities & transport.** Each step names a Surfer capability ID (e.g. `content_editor.create`); none names a transport. At the first execution step, resolve the *active Surfer transport* (an adapter actually usable this session — not just files in a checkout). Exactly one usable → use it; several with none pinned → the default; **none usable → stop and ask the user which Surfer transport to install or use, and never improvise raw HTTP or assume an endpoint.** Don't mistake a missing credential for a missing transport. The active adapter owns auth, conventions, async waits, errors, idempotency, and pre-call doc/schema lookup; resolution rules and async/poll semantics live in `surfer-capabilities`.
@@ -34,8 +35,8 @@ Analyze the live SERP for one or many keywords in a location, then turn the top-
 
 5. **Interpret the SERP.** Synthesize which competitors rank and how they differ (depth, format), flagging outliers (forums, video, brand pages) that shouldn't anchor the plan; recurring topical vocabulary with density; and structure norms as ranges (min/avg/max), not single numbers.
 
-6. **Produce the brief.** Deliver inline: angle/intent, target word-count range, heading outline from competitor structure, priority terms, and subtopics/questions. Do not write the article.
+6. **Produce the research brief.** Deliver inline: angle/intent, target word-count range, heading outline from competitor structure, priority terms, and subtopics/questions. Do not write the article.
 
    *Optional richer brief (only if the user explicitly wants it):* For Surfer's curated, scored guidelines (term ranges, topics & questions, per-factor structural targets), create a Content Editor via `content_editor.create` and wait for state `completed` — relevant event `content_editor.initialization.completed`, else poll `content_editor.get`. If it reaches `failed`, fall back to the inline brief above. Then read `seo_guidelines.get_competitors`, `seo_guidelines.get_terms`, `seo_guidelines.get_topics_and_questions`, `seo_guidelines.get_structure` (all require `completed`).
 
-7. **Hand off.** To produce a draft, hand off to **surfer-write-article** with the keyword, location, and brief. To improve existing content, point to **surfer-optimize-content**. For AI-search / LLM visibility on the same keyword, point to **surfer-ai-search**.
+7. **Hand off.** For a writer-ready Content Editor brief with SEO and AI Search facts, hand off to **surfer-create-content-brief** with the keyword, location, and research. To produce a draft, use **surfer-write-article**; to improve existing content, use **surfer-optimize-content**. For focused AI-search / LLM visibility work, use **surfer-ai-search**.

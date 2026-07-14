@@ -1,22 +1,24 @@
 # Surfer API capability map
 
-REST binding for the IDs in `surfer-capabilities/ports.md`; cite ports.md for async/poll
-semantics. Referenced by surfer-api as a sibling, never by a workflow.
+REST binding for the IDs with verified REST coverage in `surfer-capabilities/ports.md`; cite
+ports.md for async/poll semantics. The registered extension IDs in
+`surfer-capabilities/content-workflows.md` intentionally have no REST binding. Referenced by
+surfer-api as a sibling, never by a workflow.
 
 This file is the REST half of the capability map: it binds each capability ID to its HTTP
 method+path, flags workspace scoping, and points at the per-resource Live doc. It carries
 **no** transport-neutral async detail (async?/webhook event/poll-via/field/terminal value);
 those live in `surfer-capabilities/ports.md`. Columns:
 
-- **Capability ID** — the neutral ID defined in `surfer-capabilities/ports.md`.
+- **Capability ID** — the neutral ID with a current REST binding.
 - **REST method+path** — HTTP verb + path. `{workspace_id}`-scoped paths are flagged under
   **Workspace-scoped?**.
 - **Workspace-scoped?** — under `/api/v2/workspaces/{workspace_id}/...`? `Yes` / `No`.
 - **Live-doc URL** — per-resource doc to fetch before calling (see SKILL.md standing rule):
   `https://app.surferseo.com/llms/<resource>.txt`.
 
-All 69 capability IDs are listed. Prefer v2; v1/`_v1` rows are legacy/deprecated, kept only
-where no v2 equivalent exists.
+All 69 currently REST-supported capability IDs are listed. Prefer v2; v1/`_v1` rows are
+legacy/deprecated, kept only where no v2 equivalent exists.
 
 ## Workspaces
 

@@ -3,12 +3,13 @@ name: surfer-capabilities
 description: >-
   Use when you need to understand or execute a Surfer capability ID referenced by a surfer-*
   workflow — e.g. a content_editor.*, seo_guidelines.*, ai_article.*, auto_optimize.*,
-  ai_search.*, audit.*, or workspace.* id — and you need the shared, transport-neutral meaning
-  of that id, or you are asking "which transport actually runs this capability". This skill
-  defines the contract and vocabulary that capability IDs are drawn from: workspace-scoping,
-  idempotency intent, and the async model, all phrased independently of any one transport. It
-  does NOT make calls and names no endpoint, path, or tool — the active Surfer transport adapter
-  (e.g. the REST adapter behind /surfer-api) executes capabilities and owns those details.
+  ai_search.*, recommendation.*, brand_knowledge.*, internal_link.*, wordpress.*, audit.*, or
+  workspace.* id — and you need the shared, transport-neutral meaning of that id, or you are
+  asking "which transport actually runs this capability". This skill defines the contract and
+  vocabulary that capability IDs are drawn from: workspace-scoping, idempotency intent, and the
+  async model, all phrased independently of any one transport. It does NOT make calls and names no
+  endpoint, path, or tool — the active Surfer transport adapter (e.g. the REST adapter behind
+  /surfer-api) executes capabilities and owns those details.
 license: MIT
 ---
 
@@ -19,7 +20,8 @@ license: MIT
 The shared vocabulary every `surfer-*` workflow draws from. It defines *what a capability ID
 means* and the always-on semantics that hold no matter how the call is made. It is **not a
 resolver and makes no calls** — execution belongs to whichever Surfer transport **adapter** is
-active. The only sibling it points to is `ports.md` (the per-ID async/poll table).
+active. Read `ports.md` for verified async/poll behavior and `content-workflows.md` for the
+semantic setup, score, and extension contracts behind the content-workflow skills.
 
 ## 1. The contract rule
 
@@ -59,7 +61,21 @@ The mapping of each async capability ID to its named completion event and its po
 capability (plus the terminal field/value to check) lives in the sibling **`ports.md`**. Consult
 it whenever an operation is non-terminal.
 
-## 4. Transport selection & override (stated once)
+`content-workflows.md` registers the deliberately unbound extension IDs required for workspace
+setup, recommendations, fresh outline generation, internal links, and WordPress publishing. An
+extension is part of the contract but is **not executable** until an active adapter explicitly
+reports it as supported and supplies its normalized operation contract. The REST adapter does not
+bind those IDs today.
+
+## 4. Normalized operation vocabulary
+
+Adapters may expose native state names, but normalize them for workflows as `pending`, `running`,
+`awaiting_input`, `succeeded`, `failed`, `cancelled`, or `indeterminate`. Preserve the resource or
+operation id across every wait/retry. `awaiting_input` is not a timeout; surface the decision and
+do not continue until it is supplied. `indeterminate` means the bounded observation window ended
+without a verified terminal state.
+
+## 5. Transport selection & override (stated once)
 
 **First, determine which adapters are usable in *this session*.** An adapter is usable only if its
 skill is activatable here (you can load it) and, where it relies on an external transport, that
@@ -81,10 +97,10 @@ installed. Apply the rules below only among adapters usable here.
   present a transport choice and do not silently switch to another adapter.
 
 The **chosen adapter owns** everything mechanical: authentication, error taxonomy, rate limits,
-the idempotency mechanism, pagination, and any pre-call documentation/schema lookup needed before
-a call. Workflows do not duplicate these.
+the idempotency mechanism, pagination, native-to-normalized status mapping, and any pre-call
+documentation/schema lookup needed before a call. Workflows do not duplicate these.
 
-## 5. Non-goal (explicit)
+## 6. Non-goal (explicit)
 
 This skill names **no concrete endpoint, path, method, or tool**, and resolves no ID to one. For
 anything concrete — how an ID maps to a call, request/response shapes, auth, errors — the

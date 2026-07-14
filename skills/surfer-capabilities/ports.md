@@ -3,12 +3,13 @@
 Transport-neutral capability contract. Each transport adapter binds these IDs to its own
 invocation (e.g. REST → surfer-api/capability-map.md). New transports bind the same IDs their own way.
 
-This file is the transport-neutral half of the capability map: it states, per capability ID,
-whether the operation is asynchronous, which `content_editor.*` webhook event(s) it can emit,
-and — when an agent has no webhook receiver — how to poll for terminal state (which GET
-capability to read, which field, and the verified success/failure values). It carries **no**
-REST detail (no method, path, URL, header, or tool name); resolve those in the transport
-adapter.
+This file is the transport-neutral half of the **verified executable** capability map: it states,
+per capability ID, whether the operation is asynchronous, which `content_editor.*` webhook
+event(s) it can emit, and — when an agent has no webhook receiver — how to poll for terminal state
+(which GET capability to read, which field, and the verified success/failure values). It carries
+**no** REST detail (no method, path, URL, header, or tool name); resolve those in the transport
+adapter. The separately registered extension IDs in `content-workflows.md` stay out of this table
+until an adapter commits their wait semantics.
 
 Terminal vocabulary differs by resource — never assume `completed`. The verified mappings:
 
@@ -111,3 +112,7 @@ Terminal vocabulary differs by resource — never assume `completed`. The verifi
 - **Bounded poll.** No documented interval/timeout; start at 2-5s, back off exponentially
   capped at ~30-60s, stop at a hard cap, and report **timed-out / indeterminate** rather
   than looping.
+- **Extensions.** `content-workflows.md` registers the workspace, recommendation, fresh-outline,
+  internal-link, and WordPress capabilities needed by the full workflow. They are not REST
+  capabilities and do not acquire a table row until their adapter documents a verified terminal
+  contract.

@@ -1,12 +1,13 @@
 ---
 name: surfer-api
 description: >-
-  Surfer's REST adapter — today the default Surfer transport. Use to execute any Surfer capability
-  over REST, when a surfer-* workflow needs to execute its calls, or when the user mentions the
-  Surfer API, an API key, a workspace_id, a v1/v2 endpoint or path, webhooks, rate limits,
+  Surfer's REST adapter — today the default Surfer transport. Use to execute any REST-bound Surfer
+  capability, when a surfer-* workflow needs to execute its REST calls, or when the user mentions
+  the Surfer API, an API key, a workspace_id, a v1/v2 endpoint or path, webhooks, rate limits,
   idempotency, or pagination. Capability IDs and their neutral async/poll semantics live in
-  surfer-capabilities; this skill is how those run over HTTP. An explicit transport pin (e.g.
-  /surfer-api) always takes precedence.
+  surfer-capabilities; this skill is how REST-bound IDs run over HTTP. It does not implement the
+  app/MCP extension capabilities for recommendations, internal links, or WordPress publishing. An
+  explicit transport pin (e.g. /surfer-api) always takes precedence.
 license: MIT
 ---
 
@@ -18,7 +19,7 @@ Surfer's pure REST adapter. It covers how to authenticate and call the API, the 
 REST conventions every HTTP call obeys, and the **capability map** binding each shared
 capability ID to its REST method+path. The `surfer-*` workflow skills decide *what* to call
 and in what order; this skill is *how* over HTTP. REST is the **current default** Surfer
-transport; per `surfer-capabilities` §4 an explicit transport pin always wins, and new
+transport; per `surfer-capabilities` §5 an explicit transport pin always wins, and new
 transport adapters can be added later without changing workflows.
 
 Capability IDs and their neutral async/poll semantics are defined in
@@ -88,9 +89,10 @@ throttle proactively as `remaining` nears 0.
 the same path returns the original response; reusing it on a different path -> `422`. Keys
 expire after 24h. Generate **one key per logical create up front and reuse it on every
 retry** of that same create (including `429` and network retries) to avoid double-spending.
-Credit-spending creates: `content_editor.create`, `ai_article.generate`, `auto_optimize.run`,
-`outline.regenerate`, `serp_analyzer.*`, `audit.create`. `quota_exceeded` (`422`) is **not
-retryable** — stop and report.
+Apply an idempotency key only to a v2 create whose live doc advertises one. The Content Editor,
+custom-template, and custom-voice create docs explicitly do; inspect the live document for every
+other operation rather than carrying a key by assumption. Legacy creates require their documented
+mechanism. `quota_exceeded` (`422`) is **not retryable** — stop and report.
 
 **Async transport (REST mechanics).** *Which* ops are async, the webhook events they emit,
 and the poll-via target / field / verified terminal values are the transport-neutral
@@ -123,10 +125,11 @@ no v2 equivalent exists yet (Audit, SERP Analyzer, AI Detector, Humanizer, Locat
 
 ## Capability map
 
-All 69 capability IDs — grouped, with REST method+path, workspace-scoping, and Live-doc URL
-— are bound in **capability-map.md** (sibling). That is the REST binding only; the neutral
-async/poll semantics for each ID live in `surfer-capabilities/ports.md`. Workflow skills
-reference IDs, never raw paths; read the map to resolve an ID to its endpoint.
+All 69 REST-supported capability IDs — grouped with REST method+path, workspace-scoping, and
+Live-doc URL — are bound in **capability-map.md** (sibling). That is the REST binding only; the
+neutral async/poll semantics for each ID live in `surfer-capabilities/ports.md`. The extension
+IDs in `surfer-capabilities/content-workflows.md` intentionally have no REST row; report them as
+unsupported rather than guessing an endpoint. Workflow skills reference IDs, never raw paths.
 
 ## Standing rule: fetch the live doc before calling
 
