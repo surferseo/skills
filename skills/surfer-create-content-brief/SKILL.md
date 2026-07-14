@@ -31,8 +31,8 @@ well.
   `surfer_template` (mutually exclusive), and `custom_instructions`. Competitors change through
   `seo_guidelines__update_competitors` after initialization.
 - Resolve the transport: with the Surfer MCP server connected, call its tools directly; otherwise
-  run over REST with `surfer-api`; with neither, stop and ask. Stop at an unsupported capability
-  rather than inventing a route or response shape.
+  run over REST with `surfer-api`; with neither, connect one via `surfer-connect`. Stop at an
+  unsupported capability rather than inventing a route or response shape.
 
 ## Playbook
 

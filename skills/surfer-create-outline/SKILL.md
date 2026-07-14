@@ -32,9 +32,9 @@ truth. Do not invoke `ai_article__generate` unless the user changes the request 
   with `seo_guidelines__update_competitors` after initialization.
 
 Resolve the transport before the first call: with the Surfer MCP server connected, call its tools
-directly; otherwise run over REST with `surfer-api`; with neither, stop and ask. If the active
-transport cannot run a required capability, name that capability and stop. Do not replace it with
-raw HTTP or a guessed UI flow.
+directly; otherwise run over REST with `surfer-api`; with neither, connect one via `surfer-connect`.
+If the active transport cannot run a required capability, name that capability and stop. Do not
+replace it with raw HTTP or a guessed UI flow.
 
 ## Playbook
 

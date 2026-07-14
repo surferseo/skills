@@ -1,0 +1,4 @@
+interface:
+  display_name: "Connect Surfer"
+  short_description: "Connect the Surfer MCP server or API key"
+  default_prompt: "Use $surfer-connect to set up Surfer in this client."

@@ -27,8 +27,9 @@ prompt.
   try to update or delete it.
 
 Resolve the workspace with `workspace__list`. Resolve the transport: with the Surfer MCP server
-connected, call its tools directly; otherwise run over REST with `surfer-api`; with neither, stop
-and ask. Do not create a template until the user supplies or approves its name and reference text.
+connected, call its tools directly; otherwise run over REST with `surfer-api`; with neither, connect
+one via `surfer-connect`. Do not create a template until the user supplies or approves its name and
+reference text.
 
 ## Playbook
 

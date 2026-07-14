@@ -20,8 +20,8 @@ or AI Search targets the user cares about.
 ## Prerequisites
 
 - Resolve the transport: with the Surfer MCP server connected, call its tools directly; otherwise
-  run over REST with `surfer-api`; with neither, stop and ask. If no transport can run a required
-  capability, name it and stop. Do not improvise raw HTTP or assume an endpoint.
+  run over REST with `surfer-api`; with neither, connect one via `surfer-connect`. If no transport
+  can run a required capability, name it and stop. Do not improvise raw HTTP or assume an endpoint.
 - Resolve an active `workspace_id` with `workspace__list`.
 - Require a target keyword and either an import URL or raw HTML or Markdown. Ask for a missing
   keyword rather than guessing it from the page alone.

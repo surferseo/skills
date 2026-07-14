@@ -34,10 +34,10 @@ Two transports exist, and the workflows run unchanged over either.
 - This skill is the secondary, REST transport. It runs when the MCP server is not connected, or when
   the user pins it explicitly, such as with /surfer-api. A pin wins over the primary default.
 
-If neither is usable, stop and ask the user how Surfer should be run: connect the Surfer MCP server,
-or provide an API key for this skill. Never fall back to hand-written HTTP against guessed
-endpoints, and do not treat a missing credential as the blocker when the real gap is a missing
-transport.
+If neither is usable, run `surfer-connect`: it registers the MCP server in the current client or
+sets up an API key for this skill, then hands control back. Never fall back to hand-written HTTP
+against guessed endpoints, and do not treat a missing credential as the blocker when the real gap is
+a missing transport.
 
 The active transport owns everything mechanical: authentication, workspace scoping on the wire,
 idempotency, the async/poll or webhook mechanics, error taxonomy, rate limits, pagination, and any
@@ -47,9 +47,9 @@ schema lookup before a call. Workflows name capability IDs only and never restat
 
 1. **Get an API key** from the Surfer app's organization API settings.
 2. **Send `API-KEY: <key>`** on every request. All contract capabilities are authenticated. If no
-   API key is configured, stop and ask the user for it before the first call. Never fabricate one or
-   fire a blind request. This credential gate is separate from transport resolution. Reach it only
-   once a transport is resolved.
+   API key is configured, stop and ask the user for it before the first call; `surfer-connect`
+   covers obtaining and storing one. Never fabricate one or fire a blind request. This credential
+   gate is separate from transport resolution. Reach it only once a transport is resolved.
 3. **Resolve a `workspace_id`.** Most v2 resources are workspace-scoped. List workspaces with
    `workspace__list` and use one whose `state` is `active`, since only active workspaces can manage
    resources. If exactly one is active, use it. If several are active, ask the caller for the

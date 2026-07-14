@@ -20,9 +20,9 @@ the user wants only an outline or a brief, create a manual Content Editor and st
 ## Prerequisites
 
 - Resolve the transport: with the Surfer MCP server connected, call its tools directly; otherwise
-  run over REST with `surfer-api`; with neither, stop and ask rather than improvising raw HTTP. The
-  active transport owns auth, call mechanics, and async handling. If a required capability is
-  unsupported, name it and stop.
+  run over REST with `surfer-api`; with neither, connect one via `surfer-connect` rather than
+  improvising raw HTTP. The active transport owns auth, call mechanics, and async handling. If a
+  required capability is unsupported, name it and stop.
 - Resolve one active `workspace_id` with `workspace__list`.
 - Require `main_keyword` and accept up to 19 secondary keywords. Default the location to United
   States and the device to mobile. Location and device are inputs to `content_editor__create`.
