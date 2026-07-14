@@ -1,15 +1,15 @@
 ---
 name: surfer-capabilities
 description: >-
-  Use when you need to understand or execute a Surfer capability ID referenced by a surfer-*
-  workflow — e.g. a content_editor.*, seo_guidelines.*, ai_article.*, auto_optimize.*,
-  ai_search.*, recommendation.*, brand_knowledge.*, internal_link.*, wordpress.*, audit.*, or
-  workspace.* id — and you need the shared, transport-neutral meaning of that id, or you are
-  asking "which transport actually runs this capability". This skill defines the contract and
-  vocabulary that capability IDs are drawn from: workspace-scoping, idempotency intent, and the
-  async model, all phrased independently of any one transport. It does NOT make calls and names no
-  endpoint, path, or tool — the active Surfer transport adapter (e.g. the REST adapter behind
-  /surfer-api) executes capabilities and owns those details.
+  Use when a surfer-* workflow names a Surfer capability ID and you need its shared,
+  transport-neutral meaning, or when you are choosing which transport runs a capability. Capability
+  IDs are the Surfer MCP server's tool names, such as content_editor__*, content__*,
+  content_score__*, seo_guidelines__*, ai_search_guidelines__*, ai_article__*, auto_optimize__*,
+  outline__*, recommendation__*, brand_knowledge__*, internal_link__*, wordpress__*, and
+  workspace__*. This skill defines the contract they are drawn from: workspace scoping, idempotency,
+  the async model, and how a transport is chosen. It makes no calls and names no endpoint, path, or
+  method. The active transport (for example the REST adapter behind /surfer-api) executes
+  capabilities and owns those details.
 license: MIT
 ---
 
@@ -17,92 +17,99 @@ license: MIT
 
 ## Overview
 
-The shared vocabulary every `surfer-*` workflow draws from. It defines *what a capability ID
-means* and the always-on semantics that hold no matter how the call is made. It is **not a
-resolver and makes no calls** — execution belongs to whichever Surfer transport **adapter** is
-active. Read `ports.md` for verified async/poll behavior and `content-workflows.md` for the
-semantic setup, score, and extension contracts behind the content-workflow skills.
+Every `surfer-*` workflow draws its vocabulary from here. This skill defines the always-on
+semantics that hold however a call is made, and the rules for choosing a transport. Capability IDs
+are exactly the Surfer MCP server's tool names, such as `content_editor__create`. That curated tool
+surface is the contract. The skill makes no calls. It also does not restate what each capability
+does: for a capability's inputs, async behavior, and status values, the authoritative source is the
+MCP tool's own description over MCP, or `surfer-api`'s `capability-map.md` over REST. Read
+`content-workflows.md` for the shared setup vocabulary and the registry of extension capabilities
+that are not yet tools.
 
 ## 1. The contract rule
 
-- Workflows name **capability IDs only** (e.g. `content_editor.create`, `seo_guidelines.get_score`,
-  `ai_article.generate`) — never endpoints, paths, or tool names.
-- Every ID is executed through whichever Surfer transport **adapter** is currently active.
-- Transports are **interchangeable** and capability IDs are **transport-opaque**: the same ID
-  means the same thing regardless of how it travels. Swapping the adapter must not change which
-  ID a workflow asks for.
+- Workflows name capability IDs only, which are the MCP tool names such as `content_editor__create`,
+  `content_score__get`, and `ai_article__generate`. They never name a REST endpoint, path, or method.
+- Every ID runs through whichever Surfer transport is active. Over MCP the ID is the tool to call
+  directly. Over REST the adapter maps it to a method and path.
+- Transports are interchangeable. The same ID means the same thing over any transport, so swapping
+  the transport must not change which ID a workflow asks for.
 
 ## 2. Transport-neutral always-on semantics
 
-These hold for **all** transports. Workflows assume them and rarely restate them; the active
-adapter implements the mechanism.
+These hold for all transports. Workflows assume them and rarely restate them. The active transport
+implements the mechanism.
 
-**Workspace scoping (concept).** Most Surfer resources act **within a workspace**. Before
-operating on workspace-scoped resources, resolve an active `workspace_id` via `workspace.list`
-and use one that is active. If exactly one is active, use it; if several are, the caller must
-supply the `workspace_id` (do not guess); if none are, stop and report. *How* the scope is
-carried on the wire is the adapter's concern.
+**Workspace scoping.** Most Surfer resources act within a workspace. Before operating on one,
+resolve an active `workspace_id` with `workspace__list`. If exactly one workspace is active, use it.
+If several are active, ask the caller for the `workspace_id` rather than guessing. If none are
+active, stop and report. How the scope travels on the wire is the transport's concern.
 
-**Idempotency (intent).** A create may be retried (transient failure, backoff, network blip).
-Use **one logical idempotency key per logical create**, generated up front and reused on every
-retry of that same create, so retries do not double-spend credits or duplicate resources. The
-adapter implements the actual mechanism (header, token, dedup, etc.); the workflow's obligation
-is only "one key per create, reused on retry".
+**Idempotency.** A create may be retried after a transient failure or network blip. Use one logical
+idempotency key per logical create. Generate it up front and reuse it on every retry of that create,
+so retries do not double-spend credits or duplicate resources. The transport implements the
+mechanism. The workflow's only obligation is one key per create, reused on retry.
 
-**Async model (neutral).** Some operations return in a **non-terminal** state and finish later.
-To learn the outcome, either await the operation's **named completion event** or **poll the
-named GET capability** until it reaches a terminal state. Terminal vocabulary varies by
-resource — never assume `completed`. Poll with bounded backoff and a hard cap; on cap, treat the
-job as timed-out / indeterminate rather than looping forever.
+**Async model.** Some operations return in a non-terminal state and finish later. To learn the
+outcome, poll the named GET capability until it reaches a terminal state. A transport may also push a
+completion signal so a waiter need not poll. The MCP transport streams progress notifications while
+it holds the call open for a progress-token client, and the REST transport posts webhooks to a
+registered endpoint. That push channel is transport-specific, so polling is always valid. Terminal
+vocabulary varies by resource, so never assume `completed`. Poll with bounded backoff and a hard cap.
+On reaching the cap, report the job as timed out rather than looping forever.
 
-## 3. Per-ID async/poll table
+## 3. Where per-ID semantics live
 
-The mapping of each async capability ID to its named completion event and its poll-via GET
-capability (plus the terminal field/value to check) lives in the sibling **`ports.md`**. Consult
-it whenever an operation is non-terminal.
+This contract carries no per-ID async/poll table, because that would duplicate the transport. When
+an operation is non-terminal, read its poll target and terminal values from the active transport:
 
-`content-workflows.md` registers the deliberately unbound extension IDs required for workspace
-setup, recommendations, fresh outline generation, internal links, and WordPress publishing. An
-extension is part of the contract but is **not executable** until an active adapter explicitly
-reports it as supported and supplies its normalized operation contract. The REST adapter does not
-bind those IDs today.
+- Over the MCP server (primary), read the tool's own description. It states whether the tool is
+  async, which tool to poll, and the terminal state.
+- Over REST, read the *Async operations & polling* section of `surfer-api`'s `capability-map.md`.
+
+`content-workflows.md` registers the extension IDs for the Notion "Future" full workflow: workspace
+setup, brand-knowledge management, recommendations, internal links, and WordPress publishing. These
+are not MCP tools yet, so nothing else documents them. An extension belongs to the contract. It is
+not executable until an active transport reports it as supported and supplies its normalized
+operation contract. Neither transport binds those IDs today.
 
 ## 4. Normalized operation vocabulary
 
-Adapters may expose native state names, but normalize them for workflows as `pending`, `running`,
+A transport may expose native state names. Normalize them for workflows as `pending`, `running`,
 `awaiting_input`, `succeeded`, `failed`, `cancelled`, or `indeterminate`. Preserve the resource or
-operation id across every wait/retry. `awaiting_input` is not a timeout; surface the decision and
-do not continue until it is supplied. `indeterminate` means the bounded observation window ended
+operation id across every wait and retry. `awaiting_input` is not a timeout. Surface the decision
+and wait until the user supplies it. `indeterminate` means the bounded observation window closed
 without a verified terminal state.
 
-## 5. Transport selection & override (stated once)
+## 5. Transport selection and override
 
-**First, determine which adapters are usable in *this session*.** An adapter is usable only if its
-skill is activatable here (you can load it) and, where it relies on an external transport, that
-transport is connected this session. Files merely present in a source checkout do **not** count as
-installed. Apply the rules below only among adapters usable here.
+First, determine which Surfer transports are usable in *this session*. Two exist:
 
-- **No adapter usable** → **stop and ask** the user how Surfer should be run / which transport to
-  install or activate (e.g. `/surfer-api`). Do **not** fall back to a default, do **not** hand-write
-  HTTP, and do **not** treat a missing credential as the blocker when the real gap is a missing
-  transport.
-- **Exactly one usable** → use it; no choice to make.
-- **Several usable, user has not pinned one** → use the **declared default adapter** (currently
-  `surfer-api` — the only adapter today). Only ever select an adapter usable here. When more
-  transports are added, set the default/precedence here.
-- **Explicit user pin overrides** — e.g. the user activating a specific transport such as
-  `/surfer-api`. An explicit pin always wins over the default.
-- **Adapter installed but not yet connected** (its underlying transport isn't bound this session)
-  → surface the single concrete connect step for *that* adapter and proceed once connected; do not
-  present a transport choice and do not silently switch to another adapter.
+- The Surfer MCP server is primary. It is usable when its tools are connected this session, and its
+  tool names are the capability IDs, called directly.
+- `surfer-api` is the secondary, REST transport. It is usable when the skill is loaded and an API key
+  is available.
 
-The **chosen adapter owns** everything mechanical: authentication, error taxonomy, rate limits,
-the idempotency mechanism, pagination, native-to-normalized status mapping, and any pre-call
-documentation/schema lookup needed before a call. Workflows do not duplicate these.
+Files merely present in a source checkout do not count as connected or installed. Apply these rules
+among the transports usable here:
 
-## 6. Non-goal (explicit)
+- If both are usable and the user has not pinned one, use the MCP server.
+- If exactly one is usable, use it.
+- If neither is usable, stop and ask the user how Surfer should be run: connect the Surfer MCP
+  server, or install and authenticate `/surfer-api`. Do not fall back to hand-written HTTP, and do
+  not treat a missing credential as the blocker when the real gap is a missing transport.
+- An explicit transport pin wins over the primary default. Pinning `/surfer-api` forces REST.
+- If a transport is present but not connected, surface the one concrete connect step and proceed once
+  it is connected. The MCP tools may be absent this session, or `surfer-api` may have no API key. Do
+  not present a transport choice and do not silently switch.
 
-This skill names **no concrete endpoint, path, method, or tool**, and resolves no ID to one. For
-anything concrete — how an ID maps to a call, request/response shapes, auth, errors — the
-**active adapter is authoritative**. This file is vocabulary and contract; the adapter is the
-mechanism.
+The chosen transport owns everything mechanical: authentication, error taxonomy, rate limits, the
+idempotency mechanism, pagination, native-to-normalized status mapping, and any documentation or
+schema lookup needed before a call. Workflows do not duplicate these.
+
+## 6. Non-goal
+
+Capability IDs are the MCP tool names, but this skill resolves no ID to a concrete transport call. It
+names no REST endpoint, path, method, or request and response shape. For anything concrete, such as
+how an ID maps to a call, its request and response shapes, auth, or errors, the active transport is
+authoritative. This file holds the vocabulary and the contract. The transport is the mechanism.
