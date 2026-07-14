@@ -3,11 +3,11 @@ name: surfer-api
 description: >-
   Surfer's REST adapter. Use it to run a Surfer capability over the HTTP API, when a surfer-*
   workflow runs over REST, or when the user mentions the Surfer API, an API key, an endpoint or path,
-  webhooks, or idempotency. Capability IDs are the Surfer MCP server's tool names, defined by
-  surfer-capabilities. This skill binds each ID to a REST method and path and owns the REST async and
-  poll mechanics in capability-map.md. It does not implement the extension capabilities for
-  recommendations, internal links, or WordPress publishing. An explicit transport pin such as
-  /surfer-api always takes precedence.
+  webhooks, or idempotency. Capability IDs are the Surfer MCP server's tool names; the MCP server is
+  the primary transport, and this skill is the secondary, REST one. It binds each ID to a REST method
+  and path and owns the REST async and poll mechanics in capability-map.md. It does not implement the
+  extension capabilities for recommendations, internal links, or WordPress publishing. An explicit
+  transport pin such as /surfer-api always takes precedence.
 license: MIT
 ---
 
@@ -18,15 +18,31 @@ license: MIT
 Surfer's REST adapter. It covers how to authenticate and call the API, the always-on REST
 conventions every HTTP call obeys, and the capability map that binds each capability ID to a REST
 method and path. The `surfer-*` workflow skills decide what to call and in what order. This skill is
-how to make those calls over HTTP. REST is the secondary transport, and the Surfer MCP server is
-primary. Per `surfer-capabilities` section 5, REST runs when MCP is not connected or when the user
-pins it, and workflows run unchanged over either.
+how to make those calls over HTTP.
 
-Capability IDs are the Surfer MCP server's tool names, defined by `surfer-capabilities` as the
-transport-neutral contract. This skill binds each ID to a REST method and path, and it owns the REST
-async and poll semantics. Both live in `capability-map.md`. That reference matters here because a
-REST caller has no tool descriptions in context. It cannot otherwise tell which operations are
-asynchronous or which GET to poll.
+Capability IDs are the Surfer MCP server's tool names. This skill binds each ID to a REST method and
+path, and it owns the REST async and poll semantics. Both live in `capability-map.md`. That
+reference matters here because a REST caller has no tool descriptions in context. It cannot
+otherwise tell which operations are asynchronous or which GET to poll.
+
+## Transport selection
+
+Two transports exist, and the workflows run unchanged over either.
+
+- The Surfer MCP server is primary. When its tools are connected this session, call them directly.
+  Its tool names are the capability IDs, and each tool carries its own description of inputs, async
+  behavior, and poll target.
+- This skill is the secondary, REST transport. It runs when the MCP server is not connected, or when
+  the user pins it explicitly, such as with /surfer-api. A pin wins over the primary default.
+
+If neither is usable, stop and ask the user how Surfer should be run: connect the Surfer MCP server,
+or provide an API key for this skill. Never fall back to hand-written HTTP against guessed
+endpoints, and do not treat a missing credential as the blocker when the real gap is a missing
+transport.
+
+The active transport owns everything mechanical: authentication, workspace scoping on the wire,
+idempotency, the async/poll or webhook mechanics, error taxonomy, rate limits, pagination, and any
+schema lookup before a call. Workflows name capability IDs only and never restate those.
 
 ## Prerequisites
 
@@ -124,9 +140,9 @@ workflow.
 The sibling `capability-map.md` binds all 37 contract capability IDs, each with its REST method and
 path, workspace scoping, and Live-doc URL. It also holds the *Async operations & polling* reference
 for the async ones. `content_score__get` has no single endpoint. It is a composite of the editor
-total plus the SEO and AI Search score reads, as the map shows. The extension IDs in
-`surfer-capabilities/content-workflows.md` have no REST row. Report them as unsupported rather than
-guessing an endpoint. Workflow skills reference IDs, never raw paths.
+total plus the SEO and AI Search score reads, as the map shows. The extension IDs owned by
+`surfer-content-recommendations` have no REST row. Report them as unsupported rather than guessing
+an endpoint. Workflow skills reference IDs, never raw paths.
 
 ## Standing rule: fetch the live doc before calling
 

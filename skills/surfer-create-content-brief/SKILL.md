@@ -26,10 +26,13 @@ well.
 - Reuse an existing `content_editor_id` when it matches the intended keyword and scope. Otherwise
   create one in manual-writing mode with one logical idempotency key.
 - Before creation, collect brand knowledge, content type or template, voice, custom instructions,
-  and competitor choices whenever they must shape the initial outline. Use the setup mapping in
-  `content-workflows.md`.
-- Resolve the active transport under `surfer-capabilities`. Stop at an unsupported capability rather
-  than inventing a route or response shape.
+  and competitor choices whenever they must shape the initial outline. They map to the
+  `content_editor__create` inputs: `use_brand_knowledge`, one `custom_template_id` or
+  `surfer_template` (mutually exclusive), and `custom_instructions`. Competitors change through
+  `seo_guidelines__update_competitors` after initialization.
+- Resolve the transport: with the Surfer MCP server connected, call its tools directly; otherwise
+  run over REST with `surfer-api`; with neither, stop and ask. Stop at an unsupported capability
+  rather than inventing a route or response shape.
 
 ## Playbook
 

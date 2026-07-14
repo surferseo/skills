@@ -26,8 +26,9 @@ prompt.
 - A Surfer template is a read-only predefined template from `surfer_content_template__list`. Never
   try to update or delete it.
 
-Resolve the workspace with `workspace__list` and the active transport under `surfer-capabilities`.
-Do not create a template until the user supplies or approves its name and reference text.
+Resolve the workspace with `workspace__list`. Resolve the transport: with the Surfer MCP server
+connected, call its tools directly; otherwise run over REST with `surfer-api`; with neither, stop
+and ask. Do not create a template until the user supplies or approves its name and reference text.
 
 ## Playbook
 

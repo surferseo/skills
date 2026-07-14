@@ -19,7 +19,8 @@ or AI Search targets the user cares about.
 
 ## Prerequisites
 
-- Resolve the active transport under `surfer-capabilities`. If no transport can run a required
+- Resolve the transport: with the Surfer MCP server connected, call its tools directly; otherwise
+  run over REST with `surfer-api`; with neither, stop and ask. If no transport can run a required
   capability, name it and stop. Do not improvise raw HTTP or assume an endpoint.
 - Resolve an active `workspace_id` with `workspace__list`.
 - Require a target keyword and either an import URL or raw HTML or Markdown. Ask for a missing
@@ -28,8 +29,11 @@ or AI Search targets the user cares about.
   SEO 70+. If they ask for both and give no targets, default to 70+ for each and say so. A missing
   AI Search score does not mean zero.
 - Treat brand knowledge, content type or template, custom instructions, and competitor selection as
-  Content Editor setup. Load the mapping in `content-workflows.md` before creating or changing an
-  editor.
+  Content Editor setup, collected before the create: the brand profile is applied through the
+  `use_brand_knowledge` toggle and cannot be inspected or edited from here, the content type is one
+  `custom_template_id` or `surfer_template` (mutually exclusive), instructions go in
+  `custom_instructions`, and competitors are read and changed through `seo_guidelines__get` and
+  `seo_guidelines__update_competitors`.
 
 Use bounded waits only. On an explicit failure, an unavailable score, or a timeout, report the id
 and state. Never poll indefinitely.

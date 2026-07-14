@@ -19,14 +19,20 @@ the user wants only an outline or a brief, create a manual Content Editor and st
 
 ## Prerequisites
 
-- Resolve the active transport under `surfer-capabilities`. It owns auth, call mechanics, and async
-  handling. If a required capability is unsupported, name it and stop.
+- Resolve the transport: with the Surfer MCP server connected, call its tools directly; otherwise
+  run over REST with `surfer-api`; with neither, stop and ask rather than improvising raw HTTP. The
+  active transport owns auth, call mechanics, and async handling. If a required capability is
+  unsupported, name it and stop.
 - Resolve one active `workspace_id` with `workspace__list`.
 - Require `main_keyword` and accept up to 19 secondary keywords. Default the location to United
   States and the device to mobile. Location and device are inputs to `content_editor__create`.
 - Before creation, collect the optional `target_word_count`, any SEO or AI Search score targets,
-  `manual_outline`, and the full editor setup. For brand knowledge, content type, instructions, and
-  competitors, use `content-workflows.md`.
+  `manual_outline`, and the full editor setup: the `use_brand_knowledge` toggle (it applies the
+  workspace's brand profile, which cannot be inspected or edited from here), one
+  `custom_template_id` or `surfer_template` as the content type (mutually exclusive, and neither
+  means SERP-based structure), and `custom_instructions`. Competitors are read from the
+  `competitors` block of `seo_guidelines__get` and changed with `seo_guidelines__update_competitors`
+  after initialization.
 - Treat "AI writing mode" as the `ai_article__generate` call rather than a `content_editor__create`
   field. Leave it out for manual work.
 

@@ -26,11 +26,15 @@ truth. Do not invoke `ai_article__generate` unless the user changes the request 
 - Accept a `workspace_id` or resolve one with `workspace__list`.
 - Accept an existing `content_editor_id` to avoid spending another Content Editor credit.
 - Treat brand knowledge, content type, custom instructions, template, voice, and competitor
-  selection as setup choices. Follow the mapping and ordering rules in `content-workflows.md`.
+  selection as setup choices collected before the create: `use_brand_knowledge`, one
+  `custom_template_id` or `surfer_template` (mutually exclusive, and neither means SERP-based
+  structure), and `custom_instructions` are `content_editor__create` inputs. Competitors are changed
+  with `seo_guidelines__update_competitors` after initialization.
 
-Resolve the active transport under `surfer-capabilities` before the first call. If it cannot run a
-required capability, name that capability and stop. Do not replace it with raw HTTP or a guessed UI
-flow.
+Resolve the transport before the first call: with the Surfer MCP server connected, call its tools
+directly; otherwise run over REST with `surfer-api`; with neither, stop and ask. If the active
+transport cannot run a required capability, name that capability and stop. Do not replace it with
+raw HTTP or a guessed UI flow.
 
 ## Playbook
 
