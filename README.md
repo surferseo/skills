@@ -32,6 +32,7 @@ Workflows reference **capability IDs only** — the MCP server's tool names — 
 | `surfer-create-outline` | Build a Surfer-derived, SERP-informed article outline |
 | `surfer-create-content-brief` | Build a writer-ready SEO and AI Search content brief |
 | `surfer-manage-content-templates` | Create and manage reusable content templates |
+| `surfer-content-recommendations` | Turn site recommendations into a full write or optimize loop |
 
 ### Transports — *how the calls are made*
 
@@ -42,6 +43,12 @@ skill is needed. The **secondary** transport is the REST API, reached through on
 | Skill | What it is |
 |---|---|
 | `surfer-api` | REST adapter. Maps each capability ID to a Surfer REST method and path and owns the REST async and poll mechanics: auth, conventions, endpoints, and polling. Fetches live docs for the exact request and response shapes. |
+
+The **extension** capabilities behind the full loop — workspace setup, brand knowledge, site
+recommendations, internal linking, and WordPress publishing — are planned MCP tools and MCP-only by
+design: the REST API does not expose them, so no capability-map row ever binds them.
+`surfer-content-recommendations` owns their contract and reports any stage the connected server does
+not expose yet.
 
 The `surfer-connect` skill sets up a transport for the session. It registers the Surfer MCP server
 in your client, or configures an API key for `surfer-api`. The workflows hand off to it when no
