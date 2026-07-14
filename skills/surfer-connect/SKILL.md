@@ -36,12 +36,20 @@ the client registers one URL and the user completes a browser sign-in.
 
 The connection URL comes from Surfer's MCP documentation or the Surfer app's MCP settings. If it is
 not known in this session, ask the user for it rather than guessing. Then dispatch on the client
-actually running this session, and ask which client is in use if it cannot be detected:
+actually running this session, and ask which client is in use if it cannot be detected.
 
-| Client | Concrete step |
+The table is a starting point, not a spec. Client MCP surfaces change faster than this skill, so
+before applying a row, verify it against the client's current documentation or the client's own
+help — `claude mcp add --help`, `codex mcp --help`, the in-app connector settings — and prefer what
+the client itself reports over this table. Handle a client the table does not list the same way:
+look up how it registers a remote MCP server rather than declaring it unsupported.
+
+| Client | Starting point |
 |---|---|
 | Claude Code | Run `claude mcp add --transport http surfer <url>`, then have the user run `/mcp` and complete the sign-in. No restart needed. |
 | Claude Desktop / claude.ai | Settings → Connectors → add a custom connector with the URL. On Team and Enterprise plans this can require an org admin. Reload afterward. |
+| ChatGPT | Settings → Connectors → add a custom connector with the URL. Custom MCP connectors may require enabling developer mode under the connector settings, and availability is plan-dependent. |
+| Codex | Run `codex mcp add surfer --url <url>`, or add an `[mcp_servers.surfer]` entry with the URL to `~/.codex/config.toml`. |
 | Cursor | Add `{"mcpServers": {"surfer": {"url": "<url>"}}}` to `.cursor/mcp.json` (project) or `~/.cursor/mcp.json` (global). |
 | VS Code | Add `{"servers": {"surfer": {"type": "http", "url": "<url>"}}}` to `.vscode/mcp.json`. |
 | Anything else | Register a remote, streamable-HTTP MCP server named `surfer` with the URL in the client's MCP settings, then complete the OAuth prompt. |
