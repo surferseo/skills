@@ -34,14 +34,13 @@ the client registers one URL and the user completes a browser sign-in.
 
 ## MCP path (primary)
 
-The connection URL comes from the user. Surfer's MCP server is pre-GA behind a rollout flag. No
-public URL, public documentation, or in-app MCP settings surface it today. The user has it from
-their Surfer rollout invitation or their Surfer contact.
+The connection URL comes from Surfer's MCP documentation or the Surfer app's MCP settings.
 
 Dispatch on the client actually running this session, and ask which client is in use if it cannot
-be detected. Then ask the user for the URL. In that same message, preview the client's next steps
-so the user does not need a second round trip. For Claude Code, that is `claude mcp add --transport
-http surfer <url>`, then `/mcp` to complete the sign-in.
+be detected. If the URL is not known in this session, ask the user for it rather than guessing. In
+that same message, preview the client's next steps so the user does not need a second round trip.
+For Claude Code, that is `claude mcp add --transport http surfer <url>`, then `/mcp` to complete
+the sign-in.
 
 The table is a starting point, not a spec. Client MCP surfaces change faster than this skill, so
 before applying a row, verify it against the client's current documentation or the client's own
