@@ -22,7 +22,8 @@ well.
 ## Inputs and setup
 
 - Require `main_keyword` and ask for it when missing. Resolve the workspace and set location and
-  device as in `surfer-create-outline`.
+  device as in `surfer-create-outline`. If several workspaces are active, ask the caller which
+  `workspace_id` to use rather than guessing.
 - Reuse an existing `content_editor_id` when it matches the intended keyword and scope. Otherwise
   create one in manual-writing mode with one logical idempotency key.
 - Before creation, collect brand knowledge, content type or template, voice, custom instructions,
@@ -31,8 +32,10 @@ well.
   `surfer_template` (mutually exclusive), and `custom_instructions`. Competitors change through
   `seo_guidelines__update_competitors` after initialization.
 - Resolve the transport: with the Surfer MCP server connected, call its tools directly; otherwise
-  run over REST with `surfer-api`; with neither, connect one via `surfer-connect`. Stop at an
-  unsupported capability rather than inventing a route or response shape.
+  run over REST with `surfer-api`; with neither, connect one via `surfer-connect`. REST is usable
+  when an API key is set in the `SURFER_API_KEY` environment variable or the client's secret
+  storage. Check for that key before concluding that no transport exists. Stop at an unsupported
+  capability rather than inventing a route or response shape.
 
 ## Playbook
 
