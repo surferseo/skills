@@ -43,11 +43,9 @@ skill is needed. The **secondary** transport is the REST API, reached through on
 |---|---|
 | `surfer-api` | REST adapter. Maps each capability ID to a Surfer REST method and path and owns the REST async and poll mechanics: auth, conventions, endpoints, and polling. Fetches live docs for the exact request and response shapes. |
 
-### Getting connected
-
-| Skill | What it is |
-|---|---|
-| `surfer-connect` | Sets up a transport for the session. Registers the remote Surfer MCP server in your client — one URL plus an OAuth sign-in — or configures an API key for `surfer-api`. The workflows hand off here when no transport is usable. |
+The `surfer-connect` skill sets up a transport for the session. It registers the Surfer MCP server
+in your client, or configures an API key for `surfer-api`. The workflows hand off to it when no
+transport is usable.
 
 ## Always up to date
 
