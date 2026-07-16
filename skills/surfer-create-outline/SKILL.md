@@ -34,6 +34,8 @@ truth. Do not invoke `ai_article__generate` unless the user changes the request 
 
 Resolve the transport before the first call: with the Surfer MCP server connected, call its tools
 directly; otherwise run over REST with `surfer-api`; with neither, connect one via `surfer-connect`.
+REST is usable when an API key is set in the `SURFER_API_KEY` environment variable or the client's secret storage.
+Check for that key before concluding that no transport exists.
 If the active transport cannot run a required capability, name that capability and stop. Do not
 replace it with raw HTTP or a guessed UI flow.
 

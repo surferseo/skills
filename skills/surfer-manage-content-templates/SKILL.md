@@ -30,7 +30,10 @@ Resolve the workspace with `workspace__list`.
 If several workspaces are active, ask the caller which `workspace_id` to use rather than guessing.
 Resolve the transport: with the Surfer MCP server
 connected, call its tools directly; otherwise run over REST with `surfer-api`; with neither, connect
-one via `surfer-connect`. Do not create a template until the user supplies or approves its name and
+one via `surfer-connect`.
+REST is usable when an API key is set in the `SURFER_API_KEY` environment variable or the client's secret storage.
+Check for that key before concluding that no transport exists.
+Do not create a template until the user supplies or approves its name and
 reference text.
 
 ## Playbook

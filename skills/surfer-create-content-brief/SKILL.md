@@ -32,7 +32,10 @@ well.
   `surfer_template` (mutually exclusive), and `custom_instructions`. Competitors change through
   `seo_guidelines__update_competitors` after initialization.
 - Resolve the transport: with the Surfer MCP server connected, call its tools directly; otherwise
-  run over REST with `surfer-api`; with neither, connect one via `surfer-connect`. Stop at an
+  run over REST with `surfer-api`; with neither, connect one via `surfer-connect`.
+  REST is usable when an API key is set in the `SURFER_API_KEY` environment variable or the client's secret storage.
+  Check for that key before concluding that no transport exists.
+  Stop at an
   unsupported capability rather than inventing a route or response shape.
 
 ## Playbook
