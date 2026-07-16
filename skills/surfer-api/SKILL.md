@@ -120,8 +120,10 @@ terminal values. A REST caller learns an async outcome one of two ways.
   POST and returns `200`, then have Surfer register it. Each delivery carries a `Verification-Key`
   header and a JSON body naming a `content_editor.*` event. The event families are `initialization`,
   `seo_score`, `ai_search_score`, `content_score`, `ai_article`, `auto_optimize`, `outline`, and
-  `seo_guidelines.competitors.load_more`. Each ends in `.completed` or `.failed`, and some add
-  `.cancelled` or `.waiting_for_user_input`. These event names are a REST-transport detail. Over MCP
+  `seo_guidelines.competitors.load_more`. Most families end in `.completed` or `.failed`. The `seo_score` and `ai_search_score` families
+  end in `.calculated` on success or `.failed`. The `content_score` family fires only
+  `.recalculated`. Some families also add `.cancelled` or `.waiting_for_user_input`. These event
+  names are a REST-transport detail. Over MCP
   the same completions arrive as progress notifications.
 
 **Stale-score trap.** After a `content__update`, a score read can return the prior `score` with
