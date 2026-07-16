@@ -38,9 +38,8 @@ The connection URL comes from Surfer's MCP documentation or the Surfer app's MCP
 
 Dispatch on the client actually running this session, and ask which client is in use if it cannot
 be detected. If the URL is not known in this session, ask the user for it rather than guessing. In
-that same message, preview the client's next steps so the user does not need a second round trip.
-For Claude Code, that is `claude mcp add --transport http surfer <url>`, then `/mcp` to complete
-the sign-in.
+that same message, preview the steps from the client's table row so the user does not need a
+second round trip.
 
 The table is a starting point, not a spec. Client MCP surfaces change faster than this skill, so
 before applying a row, verify it against the client's current documentation or the client's own
