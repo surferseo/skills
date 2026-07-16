@@ -36,7 +36,7 @@ vocabulary differs by resource, so never assume `completed`.
 | Capability ID | Poll-via | Poll field | Terminal value(s) |
 |---|---|---|---|
 | `content_editor__create` | `content_editor__get` | `state` | success `completed`; failure `failed` |
-| `content__update` (triggers score recalc) | `content_score__get` | `status` (each subscore) | `ready` (each) |
+| `content__update` (triggers score recalc) | `content_score__get` | `status` (each subscore) | `seo` and `total` reach `ready`; `ai_search` reaches `ready`, `error`, or `unavailable` |
 | `auto_optimize__run` | `auto_optimize__get` | `state` (+`result`) | success `completed` (`result` = `optimized` / `nothing_to_optimize`); failure `failed` |
 | `ai_article__generate` | `ai_article__get` | `state` | success `completed`; pause `waiting_for_user_input`; failure `failed` |
 | `ai_article__submit_outline` (resumes) | `ai_article__get` | `state` | success `completed`; failure `failed` |
