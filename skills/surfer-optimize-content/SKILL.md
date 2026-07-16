@@ -20,13 +20,12 @@ or AI Search targets the user cares about.
 ## Prerequisites
 
 - Resolve the transport: with the Surfer MCP server connected, call its tools directly; otherwise
-  run over REST with `surfer-api`; with neither, connect one via `surfer-connect`.
-  REST is usable when an API key is set in the `SURFER_API_KEY` environment variable or the client's secret storage.
-  Check for that key before concluding that no transport exists.
-  If no transport
-  can run a required capability, name it and stop. Do not improvise raw HTTP or assume an endpoint.
-- Resolve an active `workspace_id` with `workspace__list`.
-  If several workspaces are active, ask the caller which `workspace_id` to use rather than guessing.
+  run over REST with `surfer-api`; with neither, connect one via `surfer-connect`. REST is usable
+  when an API key is set in the `SURFER_API_KEY` environment variable or the client's secret
+  storage. Check for that key before concluding that no transport exists. If no transport can run a
+  required capability, name it and stop. Do not improvise raw HTTP or assume an endpoint.
+- Resolve an active `workspace_id` with `workspace__list`. If several workspaces are active, ask
+  the caller which `workspace_id` to use rather than guessing.
 - Require a target keyword and either an import URL or raw HTML or Markdown. Ask for a missing
   keyword rather than guessing it from the page alone.
 - Ask which dimensions matter: SEO, AI Search, or both. If the user says only "optimize", default to
@@ -49,13 +48,12 @@ and state. Never poll indefinitely.
    org-wide search. Otherwise call `content_editor__create` once with `main_keyword`, location,
    device, the full initial setup, and `import_content_url` for a live page. Default the location to
    United States and the device to mobile. For pasted text, omit the import URL and load the body
-   after initialization. Reuse the same logical idempotency key if a
-   create must retry.
+   after initialization. Reuse the same logical idempotency key if a create must retry.
 
 2. **Wait and verify the setup.** Await the completion signal or poll `content_editor__get` until
-   `state` is `completed`. Read `content_editor__get`. If the user asked to review competitors, read the
-   `competitors` block of `seo_guidelines__get`. Report the effective brand toggle, template or
-   voice, instructions, and competitors. Apply changes only after user approval, with
+   `state` is `completed`. Read `content_editor__get`. If the user asked to review competitors,
+   read the `competitors` block of `seo_guidelines__get`. Report the effective brand toggle,
+   template or voice, instructions, and competitors. Apply changes only after user approval, with
    `content_editor__update` or `seo_guidelines__update_competitors`, then re-read the affected
    guidelines.
 

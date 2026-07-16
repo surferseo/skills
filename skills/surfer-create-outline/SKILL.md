@@ -23,8 +23,8 @@ truth. Do not invoke `ai_article__generate` unless the user changes the request 
 - Require `main_keyword`. Ask for it if it is missing.
 - Use the user's `location` and `device`. Otherwise default to United States and mobile. Location and
   device are inputs to `content_editor__create`.
-- Accept a `workspace_id` or resolve one with `workspace__list`.
-  If several workspaces are active, ask the caller which `workspace_id` to use rather than guessing.
+- Accept a `workspace_id` or resolve one with `workspace__list`. If several workspaces are active,
+  ask the caller which `workspace_id` to use rather than guessing.
 - Accept an existing `content_editor_id` to avoid spending another Content Editor credit.
 - Treat brand knowledge, content type, custom instructions, template, voice, and competitor
   selection as setup choices collected before the create: `use_brand_knowledge`, one
@@ -34,10 +34,10 @@ truth. Do not invoke `ai_article__generate` unless the user changes the request 
 
 Resolve the transport before the first call: with the Surfer MCP server connected, call its tools
 directly; otherwise run over REST with `surfer-api`; with neither, connect one via `surfer-connect`.
-REST is usable when an API key is set in the `SURFER_API_KEY` environment variable or the client's secret storage.
-Check for that key before concluding that no transport exists.
-If the active transport cannot run a required capability, name that capability and stop. Do not
-replace it with raw HTTP or a guessed UI flow.
+REST is usable when an API key is set in the `SURFER_API_KEY` environment variable or the client's
+secret storage. Check for that key before concluding that no transport exists. If the active
+transport cannot run a required capability, name that capability and stop. Do not replace it with
+raw HTTP or a guessed UI flow.
 
 ## Playbook
 
