@@ -34,9 +34,14 @@ the client registers one URL and the user completes a browser sign-in.
 
 ## MCP path (primary)
 
-The connection URL comes from Surfer's MCP documentation or the Surfer app's MCP settings. If it is
-not known in this session, ask the user for it rather than guessing. Then dispatch on the client
-actually running this session, and ask which client is in use if it cannot be detected.
+The connection URL comes from the user. Surfer's MCP server is pre-GA behind a rollout flag. No
+public URL, public documentation, or in-app MCP settings surface it today. The user has it from
+their Surfer rollout invitation or their Surfer contact.
+
+Dispatch on the client actually running this session, and ask which client is in use if it cannot
+be detected. Then ask the user for the URL. In that same message, preview the client's next steps
+so the user does not need a second round trip. For Claude Code, that is `claude mcp add --transport
+http surfer <url>`, then `/mcp` to complete the sign-in.
 
 The table is a starting point, not a spec. Client MCP surfaces change faster than this skill, so
 before applying a row, verify it against the client's current documentation or the client's own
@@ -75,8 +80,9 @@ needs a restart, and report exactly what is missing.
 
 ## Plan and availability failures
 
-- An OAuth or consent failure that names the plan means the organization's plan does not include the
-  MCP server. Say so and offer the API-key path instead.
+- The MCP path can return two distinct 403s. A plan-entitlement 403 reads "not available on your
+  current plan". A rollout 403 reads "MCP access is not yet enabled for this organization". Report
+  to the user which one occurred. For the plan-entitlement 403, offer the API-key path instead.
 - On the API-key path, a `401` means the key is missing or wrong; a `403` means the plan or
   permissions deny it. Report the difference rather than retrying in a loop.
 
