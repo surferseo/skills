@@ -24,6 +24,7 @@ truth. Do not invoke `ai_article__generate` unless the user changes the request 
 - Use the user's `location` and `device`. Otherwise default to United States and mobile. Location and
   device are inputs to `content_editor__create`.
 - Accept a `workspace_id` or resolve one with `workspace__list`.
+  If several workspaces are active, ask the caller which `workspace_id` to use rather than guessing.
 - Accept an existing `content_editor_id` to avoid spending another Content Editor credit.
 - Treat brand knowledge, content type, custom instructions, template, voice, and competitor
   selection as setup choices collected before the create: `use_brand_knowledge`, one

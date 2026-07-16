@@ -23,6 +23,7 @@ well.
 
 - Require `main_keyword` and ask for it when missing. Resolve the workspace and set location and
   device as in `surfer-create-outline`.
+  If several workspaces are active, ask the caller which `workspace_id` to use rather than guessing.
 - Reuse an existing `content_editor_id` when it matches the intended keyword and scope. Otherwise
   create one in manual-writing mode with one logical idempotency key.
 - Before creation, collect brand knowledge, content type or template, voice, custom instructions,

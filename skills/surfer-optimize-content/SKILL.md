@@ -23,6 +23,7 @@ or AI Search targets the user cares about.
   run over REST with `surfer-api`; with neither, connect one via `surfer-connect`. If no transport
   can run a required capability, name it and stop. Do not improvise raw HTTP or assume an endpoint.
 - Resolve an active `workspace_id` with `workspace__list`.
+  If several workspaces are active, ask the caller which `workspace_id` to use rather than guessing.
 - Require a target keyword and either an import URL or raw HTML or Markdown. Ask for a missing
   keyword rather than guessing it from the page alone.
 - Ask which dimensions matter: SEO, AI Search, or both. If the user says only "optimize", default to
