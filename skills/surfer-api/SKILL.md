@@ -113,8 +113,8 @@ terminal values. A REST caller learns an async outcome one of two ways.
 
 - *Polling.* An agent executing calls directly, with no webhook receiver of its own, polls. Poll the
   GET named in that section. Never assume the literal value `completed`, because terminal vocabulary
-  differs by resource. Respect rate-limit headers, back off starting near 2 to 5 seconds and capping
-  near 30 to 60 seconds, and stop at a hard cap. On reaching the cap, report the job as
+  differs by resource. Respect rate-limit headers, back off between polls using the interval in the *Async operations
+  & polling* section of `capability-map.md`, and stop at a hard cap. On reaching the cap, report the job as
   indeterminate rather than looping.
 - *Webhooks, optional, for integrators.* Setup is org-level. Expose an HTTPS endpoint that accepts
   POST and returns `200`, then have Surfer register it. Each delivery carries a `Verification-Key`
