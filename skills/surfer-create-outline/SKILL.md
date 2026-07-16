@@ -8,6 +8,7 @@ description: >-
   template, instructions, and competitor choices. For a writer-ready plan that also includes AI
   Search facts, or for SERP or competitor research with no deliverable, use
   surfer-create-content-brief. For a complete AI-written draft, use surfer-write-article.
+license: MIT
 ---
 
 # Surfer: Create an Optimized Outline

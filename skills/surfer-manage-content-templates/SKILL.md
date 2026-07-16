@@ -6,6 +6,7 @@ description: >-
   "list our templates", "set a default template", and "update or delete a content template". For a
   writing style or tone profile, use custom voices. For one article's direction, use the custom
   instructions in surfer-write-article.
+license: MIT
 ---
 
 # Surfer: Manage Content Templates

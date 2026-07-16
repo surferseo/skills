@@ -9,6 +9,7 @@ description: >-
   writing anything. It creates or reuses a manual Content Editor and assembles its outline, SEO
   guidelines, and source-attributed AI Search facts into a concise brief. For an outline alone, use
   surfer-create-outline. For an article draft, use surfer-write-article.
+license: MIT
 ---
 
 # Surfer: Create a Content Brief
