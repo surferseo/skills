@@ -1,0 +1,4 @@
+interface:
+  display_name: "Create Surfer Content Brief"
+  short_description: "Build an SEO and AI Search content brief"
+  default_prompt: "Use $surfer-create-content-brief to prepare a writer-ready brief for [keyword]."

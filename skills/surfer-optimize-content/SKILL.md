@@ -1,43 +1,87 @@
 ---
 name: surfer-optimize-content
 description: >-
-  Use when the user has existing content — a URL or draft — and wants it to score better against
-  Surfer's SEO guidelines. Triggers: "optimize my article", "improve this page's content score",
-  "auto-optimize this", "make this rank better". Not for writing new content (use
-  surfer-write-article) or AI-search / LLM visibility (use surfer-ai-search).
+  Use when the user has existing content, a URL or a draft, and wants to improve its Surfer SEO
+  Score, AI Search Score, or both. Triggers include "optimize my article", "improve this page's
+  content score", "auto-optimize this", "make this rank better", "optimize for SEO and AI search",
+  and "improve my AI or LLM visibility". For writing a new article from scratch, use
+  surfer-write-article instead.
 license: MIT
 ---
 
 # Surfer: Optimize Existing Content
 
 ## Overview
-Raise the Surfer SEO score of content the user already has (a live URL or pasted draft) against a target keyword, via a Content Editor. If the content does not exist yet, hand off to surfer-write-article; for AI-search/LLM visibility, hand off to surfer-ai-search.
+
+Raise the Surfer score dimensions the user selected for a page or draft, working through a Content
+Editor. Treat the unified Content Score as a diagnostic snapshot. Optimize against the explicit SEO
+or AI Search targets the user cares about.
 
 ## Prerequisites
-- **Capabilities & transport.** Each step names a Surfer capability ID (e.g. `content_editor.create`); none names a transport. At the first execution step, resolve the *active Surfer transport* (an adapter actually usable this session — not just files in a checkout). Exactly one usable → use it; several with none pinned → the default; **none usable → stop and ask the user which Surfer transport to install or use, and never improvise raw HTTP or assume an endpoint.** Don't mistake a missing credential for a missing transport. The active adapter owns auth, conventions, async waits, errors, idempotency, and pre-call doc/schema lookup; resolution rules and async/poll semantics live in `surfer-capabilities`.
-- An active `workspace_id` (via `workspace.list`).
-- A target keyword (mandatory) AND either an import URL or raw HTML/Markdown. If the keyword is missing, ask the user; do not proceed.
-- Optional: secondary keywords, location, device, target score (default 70+).
 
-Async waits below: an async op finishes via its named webhook event or a poll of the named GET capability. On timeout, a `failed` state, or auth/workspace failure, report and stop.
+- Resolve the transport: with the Surfer MCP server connected, call its tools directly; otherwise
+  run over REST with `surfer-api`; with neither, connect one via `surfer-connect`. REST is usable
+  when an API key is set in the `SURFER_API_KEY` environment variable or the client's secret
+  storage. Check for that key before concluding that no transport exists. If no transport can run a
+  required capability, name it and stop. Do not improvise raw HTTP or assume an endpoint.
+- Resolve an active `workspace_id` with `workspace__list`. If several workspaces are active, ask
+  the caller which `workspace_id` to use rather than guessing.
+- Require a target keyword and either an import URL or raw HTML or Markdown. Ask for a missing
+  keyword rather than guessing it from the page alone.
+- Ask which dimensions matter: SEO, AI Search, or both. If the user says only "optimize", default to
+  SEO 70+. If they ask for both and give no targets, default to 70+ for each and say so. A missing
+  AI Search score does not mean zero.
+- Treat brand knowledge, content type or template, custom instructions, and competitor selection as
+  Content Editor setup, collected before the create: the brand profile is applied through the
+  `use_brand_knowledge` toggle and cannot be inspected or edited from here, the content type is one
+  `custom_template_id` or `surfer_template` (mutually exclusive), instructions go in
+  `custom_instructions`, and competitors are read and changed through `seo_guidelines__get` and
+  `seo_guidelines__update_competitors`.
+
+Use bounded waits only. On an explicit failure, an unavailable score, or a timeout, report the id
+and state. Never poll indefinitely.
 
 ## Playbook
 
-1. **Get or create the Content Editor.** Reuse an existing id (`content_editor.list`, or org-wide `content_editor.list_all`; both 90-day windowed), or `content_editor.create` with `main_keyword` plus, for a live page, `import_content_url`; pass secondary keywords/location/device as `secondary_keywords`/`location`/`device` (for pasted text omit `import_content_url`, load in step 3). Poll `content_editor.get` until `state` is `completed`, which most downstream calls require.
+1. **Create or reuse a Content Editor.** Reuse a matching editor through `content_editor__list` when
+   the user supplies one or asks to continue it. Omit `workspace_id` on that list call for an
+   org-wide search. Otherwise call `content_editor__create` once with `main_keyword`, location,
+   device, the full initial setup, and `import_content_url` for a live page. Default the location to
+   United States and the device to mobile. For pasted text, omit the import URL and load the body
+   after initialization. Reuse the same logical idempotency key if a create must retry.
 
-2. **Read the baseline.** SEO score: `seo_guidelines.get_score`. Targets: `seo_guidelines.get_terms` (each `included` term has `heading` and a `target_range`) and `seo_guidelines.get_structure` (absolute count = `target.avg × word_count`, the baseline `word_count`, not draft length). `seo_guidelines.get` returns everything at once but can be large.
+2. **Wait and verify the setup.** Await the completion signal or poll `content_editor__get` until
+   `state` is `completed`. Read `content_editor__get`. If the user asked to review competitors,
+   read the `competitors` block of `seo_guidelines__get`. Report the effective brand toggle,
+   template or voice, instructions, and competitors. Apply changes only after user approval, with
+   `content_editor__update` or `seo_guidelines__update_competitors`, then re-read the affected
+   guidelines.
 
-3. **Ensure content is loaded.** URL-imported content is already present — inspect via `content_editor.get_content`. For pasted text, load it with `content_editor.update_content`, then re-read after recalc (step 5) before reading score.
+3. **Load content and establish the baseline.** For a pasted draft, call `content__update`, then
+   re-fetch with `content__get`. Read `content_score__get` for the unified `total` plus the `seo`
+   and `ai_search` subscores. Wait until each selected subscore's `status` is `ready`. Record each
+   score's `calculated_at` before the next mutation.
 
-4. **Optimize — pick a path:**
-   - **A — Auto-optimize (hands-off):** `auto_optimize.run` applies changes directly (no review). Poll `auto_optimize.get` by `job_id` until `state` is `completed`, with `result` `optimized` or `nothing_to_optimize` (lost the id, use `auto_optimize.get_latest`). A rejected run means either nothing to optimize or quota exceeded: on quota exceeded, abort and report (no retry); otherwise treat as nothing to optimize.
-   - **B — Guided edit (control):** rewrite to satisfy step 2 — `included` terms within `target_range`, `heading: true` terms in headings, counts toward targets without stuffing — then push via `content_editor.update_content`.
-   Combining is fine: auto-optimize, then hand-polish.
+4. **Read only the guidance needed.** For SEO, read `seo_guidelines__get`, one brief that carries the
+   structure targets, terms, topics, questions, and competitors. For AI Search, use
+   `ai_search_guidelines__list_facts`, or `ai_search_guidelines__get` for the facts plus the score.
+   Retain every fact's source URL and `cited_by` context.
 
-5. **Re-read after recalculation.** After auto-optimize, the `completed` job from 4A is the readiness signal; re-read `seo_guidelines.get_score`. After `content_editor.update_content` (4B), poll `seo_guidelines.get_score` until `status` is `ready` (`calculating` returns the prior stale score on recalc, `null` on a first score). `update_content` sanitizes the body it stores — re-fetch `content_editor.get_content` to inspect what was stored.
+5. **Choose an optimization path**, and ask when the user has no preference.
+   - Auto-optimize runs `auto_optimize__run`, which changes the editor directly. Poll
+     `auto_optimize__get` by job id. Treat `optimized` and `nothing_to_optimize` as completed
+     results. Stop on a `failed` state. A quota problem surfaces as a 422 when starting the run.
+   - A guided edit revises the draft against the selected guidelines, without keyword stuffing or
+     unsupported claims, then calls `content__update`. Preserve source attribution for AI Search
+     facts, and re-fetch the canonical stored body with `content__get` because Surfer sanitizes it.
 
-6. **Iterate.** If short of target, re-read terms/structure for lagging factors and repeat steps 4–5. Stop when score ≥ target, `result` is `nothing_to_optimize`, the last gain is under ~2 points, or after ~3–4 iterations; report final score, delta from baseline, and what changed.
+6. **Recalculate and compare.** After either path, re-read the stored content and all selected scores
+   with `content_score__get`. After a direct content update, trust a score only once its `status` is
+   `ready` and its `calculated_at` has advanced past the pre-mutation value. A `calculating` status
+   may carry the stale score. If AI Search is `unavailable`, report why and do not claim the combined
+   target was reached.
 
-7. **Optional audit.** For signals beyond on-page coverage, `audit.create` (URL + keyword) then poll `audit.get`. Supplementary to the score loop.
-
-If SERP-derived targets misfit intent, reshape before iterating with `seo_guidelines.update_competitors` (or `seo_guidelines.load_more_competitors` when `can_load_more_competitors` is true), `seo_guidelines.update_terms`, or `seo_guidelines.update_structure`, then re-read step 2.
+7. **Iterate with a stopping rule.** Address the largest remaining SEO or AI Search gap, then repeat
+   steps 4 to 6. Stop when every selected target is met, when auto-optimize reports
+   `nothing_to_optimize`, when the last useful gain is under about one point, or after 3 to 4 rounds.
+   Report the baseline and final values for the SEO, AI Search, and unified Content Score separately.

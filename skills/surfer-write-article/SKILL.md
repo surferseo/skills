@@ -1,45 +1,83 @@
 ---
 name: surfer-write-article
 description: >-
-  Use when the user wants Surfer to produce a brand-new article or blog post from a keyword or
-  topic — e.g. "write an SEO article about X", "draft optimized content for this keyword",
-  "generate a Surfer AI article". Not for improving content that already exists (use
-  surfer-optimize-content) or SERP/keyword research without writing (use surfer-serp-research).
+  Use when the user wants Surfer to produce a brand-new article or blog post from a keyword or topic.
+  Triggers include "write an SEO article about X", "draft optimized content for this keyword",
+  "generate a Surfer AI article", and "write for SEO and AI Search". To improve content that already
+  exists, use surfer-optimize-content. For a writer brief without a draft, use
+  surfer-create-content-brief.
 license: MIT
 ---
 
-# Surfer: Write an SEO Article
+# Surfer: Write an Optimized Article
 
 ## Overview
-Turn a keyword or topic into a new, SEO-optimized draft. Use when the user wants Surfer to author fresh content; for improving existing content hand off to surfer-optimize-content.
+
+Turn a keyword into a new, AI-authored draft grounded in Surfer's SEO and AI Search analysis. When
+the user wants only an outline or a brief, create a manual Content Editor and stop before
+`ai_article__generate`.
 
 ## Prerequisites
-- **Capabilities & transport.** Each step names a Surfer capability ID (e.g. `content_editor.create`); none names a transport. At the first execution step, resolve the *active Surfer transport* (an adapter actually usable this session — not just files in a checkout). Exactly one usable → use it; several with none pinned → the default; **none usable → stop and ask the user which Surfer transport to install or use, and never improvise raw HTTP or assume an endpoint.** Don't mistake a missing credential for a missing transport. The active adapter owns auth, conventions, async waits, errors, idempotency, and pre-call doc/schema lookup; resolution rules and async/poll semantics live in `surfer-capabilities`.
-- An `active` `workspace_id` (`workspace.list` if unknown).
-- Inputs: `main_keyword` (required) plus up to 19 secondary keywords; `location` (default United States; validate via `locations.list`) and device (mobile default, or desktop). Optional: `target_word_count`, target SEO score, `manual_outline`, custom voice, template. If the user names no voice/template, pass none (Surfer uses the workspace-default voice and SERP-preselected template); call `custom_voice.list` / `content_template.list` / `surfer_content_template.list` only to resolve a specifically requested one.
+
+- Resolve the transport: with the Surfer MCP server connected, call its tools directly; otherwise
+  run over REST with `surfer-api`; with neither, connect one via `surfer-connect` rather than
+  improvising raw HTTP. REST is usable when an API key is set in the `SURFER_API_KEY` environment
+  variable or the client's secret storage. Check for that key before concluding that no transport
+  exists. The active transport owns auth, call mechanics, and async handling. If a required
+  capability is unsupported, name it and stop.
+- Resolve one active `workspace_id` with `workspace__list`. If several workspaces are active, ask
+  the caller which `workspace_id` to use rather than guessing.
+- Require `main_keyword` and accept up to 19 secondary keywords. Default the location to United
+  States and the device to mobile. Location and device are inputs to `content_editor__create`.
+- Before creation, collect the optional `target_word_count`, any SEO or AI Search score targets,
+  `manual_outline`, and the full editor setup: the `use_brand_knowledge` toggle (it applies the
+  workspace's brand profile, which cannot be inspected or edited from here), one
+  `custom_template_id` or `surfer_template` as the content type (mutually exclusive, and neither
+  means SERP-based structure), and `custom_instructions`. Competitors are read from the
+  `competitors` block of `seo_guidelines__get` and changed with `seo_guidelines__update_competitors`
+  after initialization.
+- Treat "AI writing mode" as the `ai_article__generate` call rather than a `content_editor__create`
+  field. Leave it out for manual work.
 
 ## Playbook
 
-1. **Create the Content Editor** with `content_editor.create` (keywords, location/device, optional word count/voice/template/instructions). Returns `state: scheduled`.
+1. **Create the fully configured Content Editor.** Call `content_editor__create` once with the
+   keyword, locale, device, the selected brand toggle, a template or voice, and custom instructions.
+   Reuse the logical idempotency key on a retry. If no template is selected, keep the template Surfer
+   chooses during analysis rather than inventing a content type.
 
-2. **Wait for initialization.** Poll `content_editor.get` (or await `content_editor.initialization.completed`) until `state: completed`; treat any non-`completed`/`failed` state as in-progress, bail on `failed` or a sane timeout. Reads below need a `completed` editor.
+2. **Wait for initialization.** Await the completion signal or poll `content_editor__get` until
+   `state` is `completed`. Report a failure or a bounded timeout with the editor id.
 
-3. **Read the SEO guidelines** — fetch only what you need: `seo_guidelines.get_terms` (terms + which belong in headings), `seo_guidelines.get_structure` (word/heading/paragraph/image targets), `seo_guidelines.get_topics_and_questions`, or `seo_guidelines.get` for all. Optionally refine via `seo_guidelines.update_terms` / `update_structure` / `update_topics_and_questions`.
+3. **Review the content plan before drafting.** Read `seo_guidelines__get`, one brief with the terms,
+   structure targets, topics, questions, and competitors. Read `ai_search_guidelines__list_facts`
+   when AI Search is a goal. Read `content_editor__get` to verify the brand toggle, template or
+   voice, and instructions. If the user asks to change competitors, inspect the `competitors` block
+   of `seo_guidelines__get`, apply an approved `seo_guidelines__update_competitors`, then re-read the
+   affected guidelines before generating.
 
-4. **(Optional) Review the SERP outline.** `outline.get` returns the read-only, SERP-derived outline. Only when `outline.status` (on `content_editor.get`) is `failed`, call `outline.regenerate` and await `content_editor.outline.completed`; if status is `scheduled` a job is already queued (re-calling returns conflict) — just wait. Informational; the AI article builds its own outline.
+4. **Choose outline behavior.** `outline__get` returns the read-only SERP outline.
+   `outline__regenerate` rebuilds it from the SERP competitors with the editor's template,
+   instructions, and brand knowledge. Use it after a setup change or a failed outline. For a
+   reviewable AI outline, set `manual_outline: true` when calling `ai_article__generate`. That
+   outline is separate from the SERP outline and pauses before prose is written.
 
-5. **Generate the AI article** with `ai_article.generate`; it inherits the editor's template, voice, instructions, and word count. Pass `manual_outline: true` to approve/edit the outline first. States: `new → generating_outline → [waiting_for_user_input only if manual_outline] → writing → completed/failed`. If an article already exists, the error detail should carry `active_article_id` (the example body shows empty `details`, so fall back to `ai_article.list`); `ai_article.get` it and rejoin by state — generating/writing → step 7, `waiting_for_user_input` → step 6, `completed` → step 8, `failed` → report.
+5. **Generate the AI article.** Call `ai_article__generate`. If an article already exists, rejoin it
+   with `ai_article__list` and `ai_article__get` rather than creating another. Handle the states as
+   follows. On `waiting_for_user_input`, fetch `ai_article__get_outline`, present it, and submit only
+   the user-approved version with `ai_article__submit_outline`. While it is generating or writing,
+   wait. On `failed`, report and stop.
 
-6. **Handle the manual-outline pause** (only with `manual_outline: true`). At `waiting_for_user_input` (`ai_article.get`), the body is not written yet. Fetch the proposal with `ai_article.get_outline`, surface it, then resume via `ai_article.submit_outline` (submit the proposal as-is or edited). Generation stays paused until you submit — a required decision, not a hang. Running unattended, either skip `manual_outline` or submit the proposal unchanged after a timeout.
+6. **Read the canonical draft and score snapshot.** Await the completion signal or poll
+   `ai_article__get` until `completed`. Fetch `content__get`, then read `content_score__get` for the
+   unified `total` plus the `seo` and `ai_search` subscores. Trust an individual score only when its
+   `status` is `ready`. Call out an `unavailable` AI Search score rather than treating it as a pass.
 
-7. **Await completion.** Await `content_editor.ai_article.completed` (else poll `ai_article.get`). On `content_editor.ai_article.failed`, report it.
+7. **Iterate only toward user-selected targets.** If a target is set and unmet, improve the draft
+   with the relevant SEO guidance and the sourced AI Search facts, write it with `content__update`,
+   re-fetch the sanitized stored version with `content__get`, and wait for the selected score
+   timestamps to advance. Stop after 3 to 5 rounds or after a plateau. Do not chase a unified Content
+   Score target.
 
-8. **Read the result.** Fetch the draft with `content_editor.get_content` (request Markdown if wanted). Read the SEO score (0–100) via `seo_guidelines.get_score`; poll until `status: ready` (`calculating` means the value is stale) before reporting, and read the unified `content_score` via `content_editor.get`.
-
-9. **Iterate toward the target (SEO score).** Iterate only if the user gave a target; otherwise read-and-report. While the SEO score is below target: diff the draft against `get_terms` / `get_structure` / `get_topics_and_questions`, edit, and write back with `content_editor.update_content` (it sanitizes server-side — re-fetch `content_editor.get_content`). It triggers recalculation: await `content_editor.seo_score.calculated` or poll `seo_guidelines.get_score` until `status: ready` and `calculated_at` advances, then re-read. Cap at 3–5 rounds and stop on no gain between two recalculations. Report `content_score`; don't iterate on it. For hands-off lifting use surfer-optimize-content; for LLM visibility use surfer-ai-search.
-
-10. **Deliver** the final content, the SEO and unified scores, and a share/edit link: prefer the `permalinks` field on `content_editor.get`; if empty, `permalink.list`, then `permalink.reset` to mint one.
-
-## Gotchas
-- `ai_article.generate` may run before initialization finishes: the article waits in `new` until guidelines settle, then proceeds (or `failed` if they never complete).
-- `content_editor.update_content` recalculates both scores; `content_editor.content_score.recalculated` fires only after SEO and AI Search both settle.
+8. **Deliver and hand off.** Return the canonical content, the SEO, AI Search, and unified scores
+   separately, the Content Editor id, and an edit or share link from `permalink__list`.

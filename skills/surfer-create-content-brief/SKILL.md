@@ -1,0 +1,78 @@
+---
+name: surfer-create-content-brief
+description: >-
+  Use when the user wants a writer-ready content brief grounded in Surfer's SEO and AI Search
+  guidance. Triggers include "make a content brief", "brief a writer for this keyword", "what should
+  an article cover", and "give me an SEO and AI Search brief". Also use it for SERP or competitor
+  research with no draft, such as "analyze the SERP for this keyword" or "what do the top-ranking
+  pages cover". It reports the SERP-derived competitors, structure, terms, and questions without
+  writing anything. It creates or reuses a manual Content Editor and assembles its outline, SEO
+  guidelines, and source-attributed AI Search facts into a concise brief. For an outline alone, use
+  surfer-create-outline. For an article draft, use surfer-write-article.
+license: MIT
+---
+
+# Surfer: Create a Content Brief
+
+## Overview
+
+Turn a keyword into an evidence-aware writing specification. The output is a brief for a human or
+agent writer. Do not produce a generic article, and do not imply that an empty editor already scores
+well.
+
+## Inputs and setup
+
+- Require `main_keyword` and ask for it when missing. Resolve the workspace and set location and
+  device as in `surfer-create-outline`. If several workspaces are active, ask the caller which
+  `workspace_id` to use rather than guessing.
+- Reuse an existing `content_editor_id` when it matches the intended keyword and scope. Otherwise
+  create one in manual-writing mode with one logical idempotency key.
+- Before creation, collect brand knowledge, content type or template, voice, custom instructions,
+  and competitor choices whenever they must shape the initial outline. They map to the
+  `content_editor__create` inputs: `use_brand_knowledge`, one `custom_template_id` or
+  `surfer_template` (mutually exclusive), and `custom_instructions`. Competitors change through
+  `seo_guidelines__update_competitors` after initialization.
+- Resolve the transport: with the Surfer MCP server connected, call its tools directly; otherwise
+  run over REST with `surfer-api`; with neither, connect one via `surfer-connect`. REST is usable
+  when an API key is set in the `SURFER_API_KEY` environment variable or the client's secret
+  storage. Check for that key before concluding that no transport exists. Stop at an unsupported
+  capability rather than inventing a route or response shape.
+
+## Playbook
+
+1. **Initialize the Content Editor.** Call `content_editor__create` with the complete initial setup
+   when no suitable editor exists. Await the completion signal or poll `content_editor__get` until
+   `completed`. On failure or timeout, report the editor id and stop.
+
+2. **Inspect the effective setup.** Read `content_editor__get`. Read the `competitors` block of
+   `seo_guidelines__get` only when competitor selection matters. State the effective brand toggle,
+   template or voice, instructions, and competitor set. Change a setting only on an explicit user
+   request, using `content_editor__update` or `seo_guidelines__update_competitors`.
+
+3. **Collect the brief inputs:**
+   - `outline__get` in Markdown.
+   - `seo_guidelines__get`, the SEO brief with structure targets, terms, topics, and questions.
+   - `ai_search_guidelines__list_facts` for the source-attributed facts. Also read
+     `content_score__get` to report whether the `ai_search` analysis is ready, but do not use it to
+     grade an empty draft.
+
+   If the outline is pending, wait on `outline.status`. `outline__regenerate` rebuilds it from the
+   SERP competitors with the current template, instructions, and brand knowledge. Use it after an
+   approved setup change or to recover a failed outline, then re-read `outline__get`.
+
+4. **Write the brief as structured sections.** Organize it into:
+   - search intent, the primary keyword, location and device, and audience and brand constraints
+   - a proposed title and the Surfer-derived outline
+   - word-count and structural targets, given as ranges rather than hard quotas
+   - priority terms, marking which belong in headings and which in body coverage
+   - the required subtopics and questions
+   - AI Search facts as candidate claims, each keeping its source URL and `cited_by` context
+   - explicit constraints, open questions, and the Content Editor link and id
+
+5. **Preserve evidence boundaries.** Do not call an AI Search fact true merely because an engine
+   suggested or cited it. Attribute it, ask the writer to verify material claims, and call out
+   unavailable or incomplete AI Search analysis rather than fabricating facts.
+
+6. **Hand off deliberately.** Stop after the brief unless the user also asks for drafting. Pass the
+   accepted outline and brief to `surfer-write-article`. Do not automatically start
+   `ai_article__generate`.
