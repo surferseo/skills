@@ -40,7 +40,9 @@ reference text.
 2. **Prepare a high-signal reference.** Keep stable structure, heading hierarchy, formatting, and
    representative phrasing. Remove stale facts, client secrets, and accidental product claims.
    Preserve only material the user is authorized to reuse. Do not bury changing campaign details in a
-   shared template.
+   shared template. `reference_text` must be 1 to 25,000 characters and at least 200 words, enforced
+   on both create and update. Send a reference under 200 words back to the user for more material or
+   explicit approval to expand it; never silently pad it to clear the floor.
 
 3. **Create safely.** Call `content_template__create` with `name`, `reference_text`, and
    `default: false` unless the user explicitly requests a workspace default. Do not blindly retry a
