@@ -27,8 +27,9 @@ the user wants only an outline or a brief, create a manual Content Editor and st
 - Require `main_keyword` and accept up to 19 secondary keywords. Default the location to United
   States and the device to mobile. Location and device are inputs to `content_editor__create`.
 - Before creation, collect the optional `target_word_count`, any SEO or AI Search score targets,
-  `manual_outline`, and the full editor setup: the `use_brand_knowledge` toggle (it applies the
-  workspace's brand profile, which cannot be inspected or edited from here), one
+  `manual_outline` (an `ai_article__generate` input), and the full editor setup: the
+  `use_brand_knowledge` toggle (it applies the workspace's brand profile, which cannot be
+  inspected or edited from here), one
   `custom_template_id` or `surfer_template` as the content type (mutually exclusive; omitting both
   lets Surfer preselect a template during analysis, so a no-template request cannot be guaranteed),
   and `custom_instructions`. Omitting `custom_voice_id` applies the workspace default voice; send
@@ -41,7 +42,7 @@ the user wants only an outline or a brief, create a manual Content Editor and st
 ## Playbook
 
 1. **Create the fully configured Content Editor.** Call `content_editor__create` once with the
-   keyword, locale, device, the selected brand toggle, a template or voice, and custom instructions.
+   keyword, location, device, the selected brand toggle, a template or voice, and custom instructions.
    Do not blindly retry a create; after a timeout or ambiguous failure, list recent editors with
    `content_editor__list` (sort `inserted_at` desc) and reuse one matching the keyword instead of
    creating again. If no template is selected, keep the template Surfer chooses during analysis
