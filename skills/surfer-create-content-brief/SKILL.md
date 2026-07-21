@@ -24,7 +24,9 @@ well.
 - Require `main_keyword` and ask for it when missing. Resolve the workspace and set location and
   device as in `surfer-create-outline`.
 - Reuse an existing `content_editor_id` when it matches the intended keyword and scope. Otherwise
-  create one in manual-writing mode with one logical idempotency key.
+  create one in manual-writing mode. Do not blindly retry a create; after a timeout or ambiguous
+  failure, list recent editors with `content_editor__list` (sort `inserted_at` desc) and reuse one
+  matching the keyword instead of creating again.
 - Before creation, collect brand knowledge, content type or template, voice, custom instructions,
   and competitor choices whenever they must shape the initial outline. They map to the
   `content_editor__create` inputs: `use_brand_knowledge`, one `custom_template_id` or

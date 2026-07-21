@@ -41,8 +41,9 @@ replace it with raw HTTP or a guessed UI flow.
 1. **Create or reuse the editor.** Reuse the supplied `content_editor_id` after confirming it targets
    the requested keyword and workspace. Otherwise call `content_editor__create` once with the
    complete initial setup: the keyword, location, device, `use_brand_knowledge`, any selected
-   template or voice, and `custom_instructions`. A create consumes a credit, so reuse its logical
-   idempotency key on a retry.
+   template or voice, and `custom_instructions`. A create consumes a credit, so do not blindly
+   retry it; after a timeout or ambiguous failure, list recent editors with `content_editor__list`
+   (sort `inserted_at` desc) and reuse one matching the keyword instead of creating again.
 
 2. **Wait for analysis.** Await the completion signal or poll `content_editor__get` until `state` is
    `completed`. On a `failed` state or a bounded timeout, report the editor id and its terminal or
