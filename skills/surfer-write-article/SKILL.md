@@ -66,8 +66,8 @@ the user wants only an outline or a brief, create a manual Content Editor and st
 5. **Generate the AI article.** Call `ai_article__generate`. If an article already exists, rejoin it
    with `ai_article__list` and `ai_article__get` rather than creating another. Handle the states as
    follows. On `waiting_for_user_input`, fetch `ai_article__get_outline`, present it, and submit only
-   the user-approved version with `ai_article__submit_outline`. While it is generating or writing,
-   wait. On `failed`, report and stop.
+   the user-approved version with `ai_article__submit_outline`. While it is `new`,
+   `generating_outline`, or `writing`, wait. On `failed`, report and stop.
 
 6. **Read the canonical draft and score snapshot.** Await the completion signal or poll
    `ai_article__get` until `completed`. Fetch `content__get`, then read `content_score__get` for the
