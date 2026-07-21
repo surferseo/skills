@@ -68,9 +68,9 @@ and state. Never poll indefinitely.
    `total` carries none.
 
 4. **Read only the guidance needed.** For SEO, read `seo_guidelines__get`, one brief that carries the
-   structure targets, terms, topics, questions, and competitors. For AI Search, use
-   `ai_search_guidelines__list_facts`, or `ai_search_guidelines__get` for the facts plus the score.
-   Retain every fact's source URL and `cited_by` context.
+   structure targets, terms, topics, questions, and competitors. For AI Search,
+   `ai_search_guidelines__list_facts` returns the facts, and `ai_search_guidelines__get` adds the
+   score, status, and facts count. Retain every fact's source URL and `cited_by` context.
 
 5. **Choose an optimization path**, and ask when the user has no preference.
    - Auto-optimize runs `auto_optimize__run`, which changes the editor directly. Poll
