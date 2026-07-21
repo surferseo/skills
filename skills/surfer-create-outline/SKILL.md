@@ -60,9 +60,9 @@ replace it with raw HTTP or a guessed UI flow.
    the user requested it. Use `content_editor__update` for editor settings and
    `seo_guidelines__update_competitors` for an explicit competitor selection.
 
-4. **Retrieve the outline.** Request `outline__get` in Markdown. It is generated during editor
-   creation. If it is still pending, wait on the editor's `outline.status` from `content_editor__get`,
-   then re-read it.
+4. **Retrieve the outline.** Call `outline__get`; it always returns Markdown. It is generated
+   during editor creation. If it is still pending, wait on the editor's `outline.status` from
+   `content_editor__get`, then re-read it.
 
 5. **Regenerate after a setup change when needed.** `outline__regenerate` rebuilds the outline from
    the SERP competitors and applies the editor's current template, custom instructions, and brand

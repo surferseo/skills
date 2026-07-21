@@ -55,7 +55,7 @@ well.
    request, using `content_editor__update` or `seo_guidelines__update_competitors`.
 
 3. **Collect the brief inputs:**
-   - `outline__get` in Markdown.
+   - `outline__get`, always returned as Markdown.
    - `seo_guidelines__get`, the SEO brief with structure targets, terms, topics, and questions.
    - `ai_search_guidelines__list_facts` for the source-attributed facts. Also read
      `content_score__get` to report whether the `ai_search` analysis is ready, but do not use it to
