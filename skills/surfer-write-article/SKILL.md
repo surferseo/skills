@@ -29,8 +29,10 @@ the user wants only an outline or a brief, create a manual Content Editor and st
 - Before creation, collect the optional `target_word_count`, any SEO or AI Search score targets,
   `manual_outline`, and the full editor setup: the `use_brand_knowledge` toggle (it applies the
   workspace's brand profile, which cannot be inspected or edited from here), one
-  `custom_template_id` or `surfer_template` as the content type (mutually exclusive, and neither
-  means SERP-based structure), and `custom_instructions`. Competitors are read from the
+  `custom_template_id` or `surfer_template` as the content type (mutually exclusive; omitting both
+  lets Surfer preselect a template during analysis, so a no-template request cannot be guaranteed),
+  and `custom_instructions`. Omitting `custom_voice_id` applies the workspace default voice; send
+  `custom_voice_id: null` to honor a no-voice request. Competitors are read from the
   `competitors` block of `seo_guidelines__get` and changed with `seo_guidelines__update_competitors`
   after initialization.
 - Treat "AI writing mode" as the `ai_article__generate` call rather than a `content_editor__create`

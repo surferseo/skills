@@ -30,8 +30,14 @@ well.
 - Before creation, collect brand knowledge, content type or template, voice, custom instructions,
   and competitor choices whenever they must shape the initial outline. They map to the
   `content_editor__create` inputs: `use_brand_knowledge`, one `custom_template_id` or
-  `surfer_template` (mutually exclusive), and `custom_instructions`. Competitors change through
-  `seo_guidelines__update_competitors` after initialization.
+  `surfer_template` (mutually exclusive), and `custom_instructions`. Omitting both template fields
+  lets Surfer preselect a template during analysis (the workspace default, an AI-chosen preset or
+  custom template, or none), so a no-template request cannot be guaranteed, and a set template can be
+  swapped but not removed (`content_editor__update` rejects clearing `custom_template_id` without a
+  `surfer_template`). Verify the effective template afterward and swap only on request. Omitting
+  `custom_voice_id` applies the workspace default voice; send `custom_voice_id: null` to honor a
+  no-voice request. Competitors change through `seo_guidelines__update_competitors` after
+  initialization.
 - Resolve the transport: with the Surfer MCP server connected, call its tools directly; otherwise
   run over REST with `surfer-api`; with neither, connect one via `surfer-connect`. Stop at an
   unsupported capability rather than inventing a route or response shape.

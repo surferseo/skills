@@ -27,9 +27,14 @@ truth. Do not invoke `ai_article__generate` unless the user changes the request 
 - Accept an existing `content_editor_id` to avoid spending another Content Editor credit.
 - Treat brand knowledge, content type, custom instructions, template, voice, and competitor
   selection as setup choices collected before the create: `use_brand_knowledge`, one
-  `custom_template_id` or `surfer_template` (mutually exclusive, and neither means SERP-based
-  structure), and `custom_instructions` are `content_editor__create` inputs. Competitors are changed
-  with `seo_guidelines__update_competitors` after initialization.
+  `custom_template_id` or `surfer_template` (mutually exclusive), and `custom_instructions` are
+  `content_editor__create` inputs. Omitting both template fields lets Surfer preselect a template
+  during analysis (the workspace default, an AI-chosen preset or custom template, or none), so a
+  no-template request cannot be guaranteed, and a set template can be swapped but not removed
+  (`content_editor__update` rejects clearing `custom_template_id` without a `surfer_template`).
+  Verify the effective template afterward and swap only on request. Omitting `custom_voice_id`
+  applies the workspace default voice; send `custom_voice_id: null` to honor a no-voice request.
+  Competitors are changed with `seo_guidelines__update_competitors` after initialization.
 
 Resolve the transport before the first call: with the Surfer MCP server connected, call its tools
 directly; otherwise run over REST with `surfer-api`; with neither, connect one via `surfer-connect`.

@@ -33,7 +33,12 @@ or AI Search targets the user cares about.
   `use_brand_knowledge` toggle and cannot be inspected or edited from here, the content type is one
   `custom_template_id` or `surfer_template` (mutually exclusive), instructions go in
   `custom_instructions`, and competitors are read and changed through `seo_guidelines__get` and
-  `seo_guidelines__update_competitors`.
+  `seo_guidelines__update_competitors`. Omitting both template fields lets Surfer preselect a
+  template during analysis (the workspace default, an AI-chosen preset or custom template, or none),
+  so a no-template request cannot be guaranteed, and a set template can be swapped but not removed
+  (`content_editor__update` rejects clearing `custom_template_id` without a `surfer_template`).
+  Verify the effective template afterward and swap only on request. Omitting `custom_voice_id`
+  applies the workspace default voice; send `custom_voice_id: null` to honor a no-voice request.
 
 Use bounded waits only. On an explicit failure, an unavailable score, or a timeout, report the id
 and state. Never poll indefinitely.
