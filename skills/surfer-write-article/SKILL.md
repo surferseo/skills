@@ -70,7 +70,8 @@ the user wants only an outline or a brief, create a manual Content Editor and st
 6. **Read the canonical draft and score snapshot.** Await the completion signal or poll
    `ai_article__get` until `completed`. Fetch `content__get`, then read `content_score__get` for the
    unified `total` plus the `seo` and `ai_search` subscores. Trust an individual score only when its
-   `status` is `ready`. Call out an `unavailable` AI Search score rather than treating it as a pass.
+   `status` is `ready`; a `loading` or `calculating` status is still settling. Call out an `error` or
+   `unavailable` AI Search score as terminal rather than treating it as a pass or polling for `ready`.
 
 7. **Iterate only toward user-selected targets.** If a target is set and unmet, improve the draft
    with the relevant SEO guidance and the sourced AI Search facts, write it with `content__update`,

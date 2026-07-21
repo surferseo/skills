@@ -57,8 +57,10 @@ and state. Never poll indefinitely.
 
 3. **Load content and establish the baseline.** For a pasted draft, call `content__update`, then
    re-fetch with `content__get`. Read `content_score__get` for the unified `total` plus the `seo`
-   and `ai_search` subscores. Wait until each selected subscore's `status` is `ready`. Record each
-   score's `calculated_at` before the next mutation.
+   and `ai_search` subscores. Wait through `loading` or `calculating` until each selected subscore's
+   `status` is `ready`, but treat `ai_search` `error` and `unavailable` as terminal: report them and
+   stop waiting. Record the `seo` and `ai_search` `calculated_at` before the next mutation; the
+   `total` carries none.
 
 4. **Read only the guidance needed.** For SEO, read `seo_guidelines__get`, one brief that carries the
    structure targets, terms, topics, questions, and competitors. For AI Search, use
@@ -74,10 +76,11 @@ and state. Never poll indefinitely.
      facts, and re-fetch the canonical stored body with `content__get` because Surfer sanitizes it.
 
 6. **Recalculate and compare.** After either path, re-read the stored content and all selected scores
-   with `content_score__get`. After a direct content update, trust a score only once its `status` is
-   `ready` and its `calculated_at` has advanced past the pre-mutation value. A `calculating` status
-   may carry the stale score. If AI Search is `unavailable`, report why and do not claim the combined
-   target was reached.
+   with `content_score__get`. After a direct content update, trust a subscore only once its `status`
+   is `ready` and its `calculated_at` has advanced past the pre-mutation value; the `total` has no
+   `calculated_at`, so gate it on `status` alone. A `loading` or `calculating` status may carry the
+   stale score. If AI Search reports `error` or `unavailable`, report why and do not claim the
+   combined target was reached.
 
 7. **Iterate with a stopping rule.** Address the largest remaining SEO or AI Search gap, then repeat
    steps 4 to 6. Stop when every selected target is met, when auto-optimize reports
