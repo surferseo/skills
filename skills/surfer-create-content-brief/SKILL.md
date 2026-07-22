@@ -25,9 +25,9 @@ well.
   device as in `surfer-create-outline`.
 - Reuse an existing `content_editor_id` when it matches the intended keyword and scope. Otherwise
   create one: a keyword-only `content_editor__create` yields a manual editor, and AI drafting starts
-  only if `ai_article__generate` is called. Do not blindly retry a create; after a timeout or
-  ambiguous failure, list recent editors with `content_editor__list` (sort `inserted_at` desc) and
-  reuse one matching the keyword instead of creating again.
+  only if `ai_article__generate` is called. A create consumes a credit, so pass an
+  `idempotency_key` and retry a timeout or ambiguous failure with the same key; the original editor
+  is returned instead of a duplicate.
 - Before creation, collect brand knowledge, content type or template, voice, custom instructions,
   and competitor choices whenever they must shape the initial outline. They map to the
   `content_editor__create` inputs: `use_brand_knowledge`, one `custom_template_id` or

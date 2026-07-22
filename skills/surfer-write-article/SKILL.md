@@ -43,10 +43,9 @@ the user wants only an outline or a brief, create a manual Content Editor and st
 
 1. **Create the fully configured Content Editor.** Call `content_editor__create` once with the
    keyword, location, device, the selected brand toggle, a template or voice, and custom instructions.
-   Do not blindly retry a create; after a timeout or ambiguous failure, list recent editors with
-   `content_editor__list` (sort `inserted_at` desc) and reuse one matching the keyword instead of
-   creating again. If no template is selected, keep the template Surfer chooses during analysis
-   rather than inventing a content type.
+   A create consumes a credit, so pass an `idempotency_key` and retry a timeout or ambiguous failure
+   with the same key; the original editor is returned instead of a duplicate. If no template is
+   selected, keep the template Surfer chooses during analysis rather than inventing a content type.
 
 2. **Wait for initialization.** Await the completion signal or poll `content_editor__get` until
    `state` is `completed`. Report a failure or a bounded timeout with the editor id.

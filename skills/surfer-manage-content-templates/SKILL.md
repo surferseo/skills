@@ -45,10 +45,10 @@ reference text.
    explicit approval to expand it; never silently pad it to clear the floor.
 
 3. **Create safely.** Call `content_template__create` with `name`, `reference_text`, and
-   `default: false` unless the user explicitly requests a workspace default. Do not blindly retry a
-   create; after a timeout or ambiguous failure, list recent templates with
-   `content_template__list` (sort `inserted_at` desc) and reuse one matching the name instead of
-   creating again. Then read the created template to confirm its id and stored reference text.
+   `default: false` unless the user explicitly requests a workspace default. Pass an
+   `idempotency_key` and retry a timeout or ambiguous failure with the same key; the original
+   template is returned instead of a duplicate. Then read the created template to confirm its id and
+   stored reference text.
 
 4. **Update intentionally.** Read the target first, show the proposed changes to name, reference, and
    default, then call `content_template__update`. Treat changing the default as a workspace-wide

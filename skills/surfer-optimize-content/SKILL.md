@@ -49,9 +49,9 @@ and state. Never poll indefinitely.
    the user supplies one or asks to continue it. Omit `workspace_id` on that list call for an
    org-wide search. Otherwise call `content_editor__create` once with `main_keyword`, location,
    device, the full initial setup, and `import_content_url` for a live page. For pasted text, omit
-   the import URL and load the body after initialization. Do not blindly retry a create; after a
-   timeout or ambiguous failure, list recent editors with `content_editor__list` (sort
-   `inserted_at` desc) and reuse one matching the keyword instead of creating again.
+   the import URL and load the body after initialization. A create consumes a credit, so pass an
+   `idempotency_key` and retry a timeout or ambiguous failure with the same key; the original editor
+   is returned instead of a duplicate.
 
 2. **Wait and verify the setup.** Await the completion signal or poll `content_editor__get` until
    ready. Read `content_editor__get`. If the user asked to review competitors, read the
