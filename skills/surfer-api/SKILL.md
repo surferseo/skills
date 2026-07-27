@@ -113,16 +113,18 @@ terminal values. A REST caller learns an async outcome one of two ways.
 
 - *Polling.* An agent executing calls directly, with no webhook receiver of its own, polls. Poll the
   GET named in that section. Never assume the literal value `completed`, because terminal vocabulary
-  differs by resource. Respect rate-limit headers, back off starting near 2 to 5 seconds and capping
-  near 30 to 60 seconds, and stop at a hard cap. On reaching the cap, report the job as
-  indeterminate rather than looping.
+  differs by resource. Respect rate-limit headers, back off between polls using the interval in
+  that section, and stop at a hard cap. On reaching the cap, report the job as indeterminate rather
+  than looping.
 - *Webhooks, optional, for integrators.* Setup is org-level. Expose an HTTPS endpoint that accepts
   POST and returns `200`, then have Surfer register it. Each delivery carries a `Verification-Key`
   header and a JSON body naming a `content_editor.*` event. The event families are `initialization`,
   `seo_score`, `ai_search_score`, `content_score`, `ai_article`, `auto_optimize`, `outline`, and
-  `seo_guidelines.competitors.load_more`. Each ends in `.completed` or `.failed`, and some add
-  `.cancelled` or `.waiting_for_user_input`. These event names are a REST-transport detail. Over MCP
-  the same completions arrive as progress notifications.
+  `seo_guidelines.competitors.load_more`. Most families end in `.completed` or `.failed`. The
+  `seo_score` and `ai_search_score` families end in `.calculated` on success or `.failed`. The
+  `content_score` family fires only `.recalculated`. Some families also add `.cancelled` or
+  `.waiting_for_user_input`. These event names are a REST-transport detail. Over MCP the same
+  completions arrive as progress notifications.
 
 **Stale-score trap.** After a `content__update`, a score read can return the prior `score` with
 `status: calculating`. Trust `score` only when `status` is `ready` and `calculated_at` has advanced

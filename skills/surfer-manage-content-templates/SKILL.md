@@ -6,6 +6,7 @@ description: >-
   "list our templates", "set a default template", and "update or delete a content template". For a
   writing style or tone profile, use custom voices. For one article's direction, use the custom
   instructions in surfer-write-article.
+license: MIT
 ---
 
 # Surfer: Manage Content Templates
@@ -26,10 +27,12 @@ prompt.
 - A Surfer template is a read-only predefined template from `surfer_content_template__list`. Never
   try to update or delete it.
 
-Resolve the workspace with `workspace__list`. Resolve the transport: with the Surfer MCP server
+Resolve the workspace with `workspace__list`. If several workspaces are active, ask the caller
+which `workspace_id` to use rather than guessing. Resolve the transport: with the Surfer MCP server
 connected, call its tools directly; otherwise run over REST with `surfer-api`; with neither, connect
-one via `surfer-connect`. Do not create a template until the user supplies or approves its name and
-reference text.
+one via `surfer-connect`. REST is usable when an API key is set in the `SURFER_API_KEY` environment
+variable or the client's secret storage. Check for that key before concluding that no transport
+exists. Do not create a template until the user supplies or approves its name and reference text.
 
 ## Playbook
 

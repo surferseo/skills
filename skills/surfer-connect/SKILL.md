@@ -34,9 +34,12 @@ the client registers one URL and the user completes a browser sign-in.
 
 ## MCP path (primary)
 
-The connection URL comes from Surfer's MCP documentation or the Surfer app's MCP settings. If it is
-not known in this session, ask the user for it rather than guessing. Then dispatch on the client
-actually running this session, and ask which client is in use if it cannot be detected.
+The connection URL comes from Surfer's MCP documentation or the Surfer app's MCP settings.
+
+Dispatch on the client actually running this session, and ask which client is in use if it cannot
+be detected. If the URL is not known in this session, ask the user for it rather than guessing. In
+that same message, preview the steps from the client's table row so the user does not need a
+second round trip.
 
 The table is a starting point, not a spec. Client MCP surfaces change faster than this skill, so
 before applying a row, verify it against the client's current documentation or the client's own
@@ -75,8 +78,9 @@ needs a restart, and report exactly what is missing.
 
 ## Plan and availability failures
 
-- An OAuth or consent failure that names the plan means the organization's plan does not include the
-  MCP server. Say so and offer the API-key path instead.
+- The MCP path can return two distinct 403s. A plan-entitlement 403 reads "not available on your
+  current plan". A rollout 403 reads "MCP access is not yet enabled for this organization". Report
+  to the user which one occurred. For the plan-entitlement 403, offer the API-key path instead.
 - On the API-key path, a `401` means the key is missing or wrong; a `403` means the plan or
   permissions deny it. Report the difference rather than retrying in a loop.
 
