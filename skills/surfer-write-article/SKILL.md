@@ -30,15 +30,14 @@ the user wants only an outline or a brief, create a manual Content Editor and st
 - Require `main_keyword` and accept up to 19 secondary keywords. Default the location to United
   States and the device to mobile. Location and device are inputs to `content_editor__create`.
 - Before creation, collect the optional `target_word_count`, any SEO or AI Search score targets,
-  `manual_outline` (an `ai_article__generate` input), and the full editor setup: the
-  `use_brand_knowledge` toggle (it applies the workspace's brand profile, which cannot be
-  inspected or edited from here), one
-  `custom_template_id` or `surfer_template` as the content type (mutually exclusive; omitting both
-  lets Surfer preselect a template during analysis, so a no-template request cannot be guaranteed),
-  and `custom_instructions`. Omitting `custom_voice_id` applies the workspace default voice; send
-  `custom_voice_id: null` to honor a no-voice request. Competitors are read from the
-  `competitors` block of `seo_guidelines__get` and changed with `seo_guidelines__update_competitors`
-  after initialization.
+  and `manual_outline`, which is an `ai_article__generate` input. Collect the full editor setup as
+  well: the `use_brand_knowledge` toggle (it applies the workspace's brand profile, which cannot be
+  inspected or edited from here), one `custom_template_id` or `surfer_template` as the content type
+  (mutually exclusive), and `custom_instructions`. When both template fields are omitted, Surfer
+  picks a template itself during analysis, so a request for no template cannot be guaranteed.
+  Omitting `custom_voice_id` applies the workspace default voice. To honor a request for no voice,
+  send `custom_voice_id: null`. Competitors are read from the `competitors` block of
+  `seo_guidelines__get` and changed with `seo_guidelines__update_competitors` after initialization.
 - Treat "AI writing mode" as the `ai_article__generate` call rather than a `content_editor__create`
   field. Leave it out for manual work.
 
@@ -46,9 +45,10 @@ the user wants only an outline or a brief, create a manual Content Editor and st
 
 1. **Create the fully configured Content Editor.** Call `content_editor__create` once with the
    keyword, location, device, the selected brand toggle, a template or voice, and custom instructions.
-   A create consumes a credit, so pass an `idempotency_key` and retry a timeout or ambiguous failure
-   with the same key; the original editor is returned instead of a duplicate. If no template is
-   selected, keep the template Surfer chooses during analysis rather than inventing a content type.
+   A create consumes a credit, so pass an `idempotency_key`. Retry a timeout or an ambiguous
+   failure with the same key. Surfer then returns the original editor instead of creating a
+   duplicate. If no template is selected, keep the template Surfer chooses during analysis rather
+   than inventing a content type.
 
 2. **Wait for initialization.** Await the completion signal or poll `content_editor__get` until
    `state` is `completed`. Report a failure or a bounded timeout with the editor id.
@@ -75,8 +75,9 @@ the user wants only an outline or a brief, create a manual Content Editor and st
 6. **Read the canonical draft and score snapshot.** Await the completion signal or poll
    `ai_article__get` until `completed`. Fetch `content__get`, then read `content_score__get` for the
    unified `total` plus the `seo` and `ai_search` subscores. Trust an individual score only when its
-   `status` is `ready`; a `loading` or `calculating` status is still settling. Call out an `error` or
-   `unavailable` AI Search score as terminal rather than treating it as a pass or polling for `ready`.
+   `status` is `ready`. A `loading` or `calculating` status is still settling. An `error` or
+   `unavailable` AI Search score is terminal. Call it out rather than treating it as a pass or
+   polling for `ready`.
 
 7. **Iterate only toward user-selected targets.** If a target is set and unmet, improve the draft
    with the relevant SEO guidance and the sourced AI Search facts, write it with `content__update`,

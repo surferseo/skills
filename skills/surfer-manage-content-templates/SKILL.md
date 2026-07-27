@@ -43,15 +43,15 @@ exists. Do not create a template until the user supplies or approves its name an
 2. **Prepare a high-signal reference.** Keep stable structure, heading hierarchy, formatting, and
    representative phrasing. Remove stale facts, client secrets, and accidental product claims.
    Preserve only material the user is authorized to reuse. Do not bury changing campaign details in a
-   shared template. `reference_text` must be 1 to 25,000 characters and at least 200 words, enforced
-   on both create and update. Send a reference under 200 words back to the user for more material or
-   explicit approval to expand it; never silently pad it to clear the floor.
+   shared template. Create and update both require a `reference_text` of 1 to 25,000 characters and
+   at least 200 words. When the reference falls short of 200 words, ask the user for more material
+   or for approval to expand it. Never pad the reference silently to clear the floor.
 
 3. **Create safely.** Call `content_template__create` with `name`, `reference_text`, and
    `default: false` unless the user explicitly requests a workspace default. Pass an
-   `idempotency_key` and retry a timeout or ambiguous failure with the same key; the original
-   template is returned instead of a duplicate. Then read the created template to confirm its id and
-   stored reference text.
+   `idempotency_key`. Retry a timeout or an ambiguous failure with the same key. Surfer then
+   returns the original template instead of creating a duplicate. Read the created template
+   afterward to confirm its id and stored reference text.
 
 4. **Update intentionally.** Read the target first, show the proposed changes to name, reference, and
    default, then call `content_template__update`. Treat changing the default as a workspace-wide

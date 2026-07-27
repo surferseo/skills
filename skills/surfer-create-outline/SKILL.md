@@ -30,13 +30,14 @@ truth. Do not invoke `ai_article__generate` unless the user changes the request 
 - Treat brand knowledge, content type, custom instructions, template, voice, and competitor
   selection as setup choices collected before the create: `use_brand_knowledge`, one
   `custom_template_id` or `surfer_template` (mutually exclusive), and `custom_instructions` are
-  `content_editor__create` inputs. Omitting both template fields lets Surfer preselect a template
-  during analysis (the workspace default, an AI-chosen preset or custom template, or none), so a
-  no-template request cannot be guaranteed, and a set template can be swapped but not removed
-  (`content_editor__update` rejects clearing `custom_template_id` without a `surfer_template`).
-  Verify the effective template afterward and swap only on request. Omitting `custom_voice_id`
-  applies the workspace default voice; send `custom_voice_id: null` to honor a no-voice request.
-  Competitors are changed with `seo_guidelines__update_competitors` after initialization.
+  `content_editor__create` inputs. When both template fields are omitted, Surfer picks a template
+  itself during analysis. It may pick the workspace default, an AI-chosen preset or custom
+  template, or none, so a request for no template cannot be guaranteed. Verify which template took
+  effect and swap it only when the user asks. A template, once set, can be swapped but not removed.
+  `content_editor__update` rejects an update that clears `custom_template_id` without supplying a
+  `surfer_template`. Omitting `custom_voice_id` applies the workspace default voice. To honor a
+  request for no voice, send `custom_voice_id: null`. Competitors are changed with
+  `seo_guidelines__update_competitors` after initialization.
 
 Resolve the transport before the first call: with the Surfer MCP server connected, call its tools
 directly; otherwise run over REST with `surfer-api`; with neither, connect one via `surfer-connect`.
@@ -51,8 +52,8 @@ raw HTTP or a guessed UI flow.
    the requested keyword and workspace. Otherwise call `content_editor__create` once with the
    complete initial setup: the keyword, location, device, `use_brand_knowledge`, any selected
    template or voice, and `custom_instructions`. A create consumes a credit, so pass an
-   `idempotency_key` and retry a timeout or ambiguous failure with the same key; the original editor
-   is returned instead of a duplicate.
+   `idempotency_key`. Retry a timeout or an ambiguous failure with the same key. Surfer then
+   returns the original editor instead of creating a duplicate.
 
 2. **Wait for analysis.** Await the completion signal or poll `content_editor__get` until `state` is
    `completed`. On a `failed` state or a bounded timeout, report the editor id and its terminal or
@@ -64,7 +65,7 @@ raw HTTP or a guessed UI flow.
    the user requested it. Use `content_editor__update` for editor settings and
    `seo_guidelines__update_competitors` for an explicit competitor selection.
 
-4. **Retrieve the outline.** Call `outline__get`; it always returns Markdown. It is generated
+4. **Retrieve the outline.** Call `outline__get`. It always returns Markdown and is generated
    during editor creation. If it is still pending, wait on the editor's `outline.status` from
    `content_editor__get`, then re-read it.
 

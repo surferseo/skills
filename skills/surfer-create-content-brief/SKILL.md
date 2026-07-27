@@ -26,21 +26,21 @@ well.
   device as in `surfer-create-outline`. If several workspaces are active, ask the caller which
   `workspace_id` to use rather than guessing.
 - Reuse an existing `content_editor_id` when it matches the intended keyword and scope. Otherwise
-  create one: a keyword-only `content_editor__create` yields a manual editor, and AI drafting starts
-  only if `ai_article__generate` is called. A create consumes a credit, so pass an
-  `idempotency_key` and retry a timeout or ambiguous failure with the same key; the original editor
-  is returned instead of a duplicate.
+  create one. A `content_editor__create` call with only a keyword yields a manual editor. AI
+  drafting starts only when `ai_article__generate` is called. A create consumes a credit, so pass
+  an `idempotency_key`. Retry a timeout or an ambiguous failure with the same key. Surfer then
+  returns the original editor instead of creating a duplicate.
 - Before creation, collect brand knowledge, content type or template, voice, custom instructions,
   and competitor choices whenever they must shape the initial outline. They map to the
   `content_editor__create` inputs: `use_brand_knowledge`, one `custom_template_id` or
-  `surfer_template` (mutually exclusive), and `custom_instructions`. Omitting both template fields
-  lets Surfer preselect a template during analysis (the workspace default, an AI-chosen preset or
-  custom template, or none), so a no-template request cannot be guaranteed, and a set template can be
-  swapped but not removed (`content_editor__update` rejects clearing `custom_template_id` without a
-  `surfer_template`). Verify the effective template afterward and swap only on request. Omitting
-  `custom_voice_id` applies the workspace default voice; send `custom_voice_id: null` to honor a
-  no-voice request. Competitors change through `seo_guidelines__update_competitors` after
-  initialization.
+  `surfer_template` (mutually exclusive), and `custom_instructions`. When both template fields are
+  omitted, Surfer picks a template itself during analysis. It may pick the workspace default, an
+  AI-chosen preset or custom template, or none, so a request for no template cannot be guaranteed.
+  Verify which template took effect and swap it only when the user asks. A template, once set, can
+  be swapped but not removed. `content_editor__update` rejects an update that clears
+  `custom_template_id` without supplying a `surfer_template`. Omitting `custom_voice_id` applies
+  the workspace default voice. To honor a request for no voice, send `custom_voice_id: null`.
+  Competitors change through `seo_guidelines__update_competitors` after initialization.
 - Resolve the transport: with the Surfer MCP server connected, call its tools directly; otherwise
   run over REST with `surfer-api`; with neither, connect one via `surfer-connect`. REST is usable
   when an API key is set in the `SURFER_API_KEY` environment variable or the client's secret
