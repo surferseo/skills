@@ -36,7 +36,13 @@ or AI Search targets the user cares about.
   `use_brand_knowledge` toggle and cannot be inspected or edited from here, the content type is one
   `custom_template_id` or `surfer_template` (mutually exclusive), instructions go in
   `custom_instructions`, and competitors are read and changed through `seo_guidelines__get` and
-  `seo_guidelines__update_competitors`.
+  `seo_guidelines__update_competitors`. When both template fields are omitted, Surfer picks a
+  template itself during analysis. It may pick the workspace default, an AI-chosen preset or custom
+  template, or none, so a request for no template cannot be guaranteed. Verify which template took
+  effect and swap it only when the user asks. A template, once set, can be swapped but not removed.
+  `content_editor__update` rejects an update that clears `custom_template_id` without supplying a
+  `surfer_template`. Omitting `custom_voice_id` applies the workspace default voice. To honor a
+  request for no voice, send `custom_voice_id: null`.
 
 Use bounded waits only. On an explicit failure, an unavailable score, or a timeout, report the id
 and state. Never poll indefinitely.
@@ -48,7 +54,9 @@ and state. Never poll indefinitely.
    org-wide search. Otherwise call `content_editor__create` once with `main_keyword`, location,
    device, the full initial setup, and `import_content_url` for a live page. Default the location to
    United States and the device to mobile. For pasted text, omit the import URL and load the body
-   after initialization. Reuse the same logical idempotency key if a create must retry.
+   after initialization. A create consumes a credit, so pass an `idempotency_key`. Retry a timeout
+   or an ambiguous failure with the same key. Surfer then returns the original editor instead of
+   creating a duplicate.
 
 2. **Wait and verify the setup.** Await the completion signal or poll `content_editor__get` until
    `state` is `completed`. Read `content_editor__get`. If the user asked to review competitors,
@@ -59,13 +67,16 @@ and state. Never poll indefinitely.
 
 3. **Load content and establish the baseline.** For a pasted draft, call `content__update`, then
    re-fetch with `content__get`. Read `content_score__get` for the unified `total` plus the `seo`
-   and `ai_search` subscores. Wait until each selected subscore's `status` is `ready`. Record each
-   score's `calculated_at` before the next mutation.
+   and `ai_search` subscores. A `loading` or `calculating` status means the score is still
+   settling, so keep waiting until each selected subscore's `status` is `ready`. An `ai_search`
+   status of `error` or `unavailable` is terminal. Report it and stop waiting. Before the next
+   mutation, record the `calculated_at` of the `seo` and `ai_search` subscores. The `total` has no
+   `calculated_at`.
 
 4. **Read only the guidance needed.** For SEO, read `seo_guidelines__get`, one brief that carries the
-   structure targets, terms, topics, questions, and competitors. For AI Search, use
-   `ai_search_guidelines__list_facts`, or `ai_search_guidelines__get` for the facts plus the score.
-   Retain every fact's source URL and `cited_by` context.
+   structure targets, terms, topics, questions, and competitors. For AI Search, read the facts with
+   `ai_search_guidelines__list_facts`. `ai_search_guidelines__get` returns the same facts plus the
+   score, its status, and the fact count. Retain every fact's source URL and `cited_by` context.
 
 5. **Choose an optimization path**, and ask when the user has no preference.
    - Auto-optimize runs `auto_optimize__run`, which changes the editor directly. Poll
@@ -76,10 +87,11 @@ and state. Never poll indefinitely.
      facts, and re-fetch the canonical stored body with `content__get` because Surfer sanitizes it.
 
 6. **Recalculate and compare.** After either path, re-read the stored content and all selected scores
-   with `content_score__get`. After a direct content update, trust a score only once its `status` is
-   `ready` and its `calculated_at` has advanced past the pre-mutation value. A `calculating` status
-   may carry the stale score. If AI Search is `unavailable`, report why and do not claim the combined
-   target was reached.
+   with `content_score__get`. After a direct content update, trust a subscore only once its `status`
+   is `ready` and its `calculated_at` has advanced past the pre-mutation value. A `loading` or
+   `calculating` status may still carry the stale score. The `total` has no `calculated_at`, so
+   gate it on `status` alone. If AI Search reports `error` or `unavailable`, report why and do not
+   claim the combined target was reached.
 
 7. **Iterate with a stopping rule.** Address the largest remaining SEO or AI Search gap, then repeat
    steps 4 to 6. Stop when every selected target is met, when auto-optimize reports
