@@ -29,9 +29,12 @@ as usual. Each tool carries its own contract in its MCP description.
 
 1. **Establish scope.** Resolve an active `workspace_id` with `workspace__list`; recommendations
    are read per workspace. If several workspaces are active, ask the caller which one to use rather
-   than guessing. If none is active, stop and report. If brand knowledge must be reviewed or
-   changed, read it with `brand__get` first, and write it with `brand__update` only with an
-   approved replacement. Do not confuse "enabled for this editor" with inspecting the profile.
+   than guessing. If none is active, stop and report. Offer a brand review before optimizing:
+   editors opened by `recommendation__optimize` always apply the workspace's brand profile, with no
+   per-editor toggle, so read it with `brand__get` and write it with `brand__update` only with an
+   approved replacement. Write recommendations are also generated from that profile, so an update
+   shapes future generation runs, not the current list. Do not confuse "enabled for this editor"
+   with inspecting the profile.
 
 2. **List, explain, and select a recommendation.** Call `recommendation__list`, filtered with
    `type` when the user already chose `optimize` or `write` work. Present each candidate's page URL
