@@ -5,8 +5,7 @@ description: >-
   optimize next", "turn my Surfer recommendations into articles", "find a content opportunity and
   act on it", and "run the write or optimize workflow from my workspace". It selects
   recommendation-led Optimize or Write work and delegates drafting and optimization to the focused
-  Surfer skills. Its recommendation stages run on MCP-only tools: REST never runs them, and without
-  the Surfer MCP server they are reported as unavailable.
+  Surfer skills.
 ---
 
 # Surfer: Act on Content Recommendations
@@ -16,14 +15,11 @@ description: >-
 Turn a chosen, site-level recommendation into one Content Editor workflow without creating the same
 work twice.
 
-## MCP-only stages
+## Prerequisites
 
-The brand and recommendation stages run on MCP-only tools — `brand__get`, `brand__update`,
-`recommendation__list`, and `recommendation__optimize`. The REST API does not expose them, no
-capability-map row ever binds them, and `surfer-api` never runs them. With no Surfer MCP server
-connected, report those stages as unavailable rather than substituting a REST endpoint or a guessed
-call. The delegated `surfer-optimize-content` and `surfer-write-article` runs use either transport
-as usual. Each tool carries its own contract in its MCP description.
+- Resolve the transport: with the Surfer MCP server connected, call its tools directly; otherwise
+  run over REST with `surfer-api`; with neither, connect one via `surfer-connect`. If no transport
+  can run a required capability, name it and stop. Do not improvise raw HTTP or assume an endpoint.
 
 ## Playbook
 
