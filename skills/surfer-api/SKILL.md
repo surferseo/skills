@@ -5,9 +5,9 @@ description: >-
   workflow runs over REST, or when the user mentions the Surfer API, an API key, an endpoint or path,
   webhooks, or idempotency. Capability IDs are the Surfer MCP server's tool names; the MCP server is
   the primary transport, and this skill is the secondary, REST one. It binds each ID to a REST method
-  and path and owns the REST async and poll mechanics in capability-map.md. It never implements the
-  MCP-only extension capabilities for recommendations, internal linking, or WordPress publishing.
-  An explicit transport pin such as /surfer-api always takes precedence.
+  and path and owns the REST async and poll mechanics in capability-map.md. It never implements
+  the MCP-only capabilities: workspace setup, brand knowledge, recommendations, internal linking,
+  and WordPress publishing. An explicit transport pin such as /surfer-api always takes precedence.
 license: MIT
 ---
 
@@ -142,10 +142,9 @@ workflow.
 The sibling `capability-map.md` binds all 37 contract capability IDs, each with its REST method and
 path, workspace scoping, and Live-doc URL. It also holds the *Async operations & polling* reference
 for the async ones. `content_score__get` has no single endpoint. It is a composite of the editor
-total plus the SEO and AI Search score reads, as the map shows. The extension IDs owned by
-`surfer-content-recommendations` are MCP-only and never get a REST row. Report a capability ID with
-no row as unsupported rather than guessing an endpoint. Workflow skills reference IDs, never raw
-paths.
+total plus the SEO and AI Search score reads, as the map shows. The MCP-only IDs used by
+`surfer-content-recommendations` never get a REST row. Report a capability ID with no row as
+unsupported rather than guessing an endpoint. Workflow skills reference IDs, never raw paths.
 
 ## Standing rule: fetch the live doc before calling
 

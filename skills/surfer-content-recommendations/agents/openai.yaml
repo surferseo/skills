@@ -1,4 +1,4 @@
 interface:
   display_name: "Act on Surfer Recommendations"
   short_description: "Turn Surfer recommendations into content work"
-  default_prompt: "Use $surfer-content-recommendations to act on my highest-priority opportunity."
+  default_prompt: "Use $surfer-content-recommendations to act on my top recommendation."

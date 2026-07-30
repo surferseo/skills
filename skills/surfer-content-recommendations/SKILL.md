@@ -6,8 +6,8 @@ description: >-
   "find a content opportunity, optimize it, link it, and publish", and "run the write or optimize
   workflow from my workspace". It selects recommendation-led Optimize or Write work, delegates
   drafting and optimization to the focused Surfer skills, and gates the optional internal-linking
-  and WordPress actions. Its extension capabilities are MCP-only: REST never runs those stages, and
-  any stage the connected server does not expose yet is reported as unavailable.
+  and WordPress actions. Its stages run on MCP-only tools: REST never runs them, and any stage the
+  connected server does not expose yet is reported as unavailable.
 ---
 
 # Surfer: Act on Content Recommendations
@@ -17,22 +17,23 @@ description: >-
 Turn a chosen, site-level recommendation into one Content Editor workflow, without accidentally
 creating it twice or publishing an unreviewed change.
 
-## Extension capabilities
+## MCP-only stages
 
-The stages below run on tools planned for the Surfer MCP server that the connected server may not
-expose yet, and they are MCP-only by design: the REST transport never binds them. Before every
-extension stage, check whether the connected server exposes the exact tool. If it does not, report
-the unavailable stage, then either stop or continue with the subset the user approved. Do not
-substitute a REST endpoint or a guessed call.
+The workspace-setup, brand, recommendation, internal-linking, and WordPress stages run on MCP-only
+tools: the REST API does not expose them, no capability-map row ever binds them, and `surfer-api`
+never runs them. With no Surfer MCP server connected, report those stages as unavailable rather
+than substituting a REST endpoint or a guessed call. The delegated `surfer-optimize-content` and
+`surfer-write-article` runs use either transport as usual.
+
+The workspace tools (`workspace__create`, `workspace__get`, `workspace__activate`), the brand tools
+(`brand__get`, `brand__update`), and the recommendation tools (`recommendation__list`,
+`recommendation__optimize`) are live on the MCP server and carry their own contracts. The
+internal-linking and WordPress tools below are planned and may not be exposed yet. Before each of
+those stages, check whether the connected server exposes the exact tool. If it does not, report the
+unavailable stage, then either stop or continue with the subset the user approved.
 
 | Capability ID | Contract | Safety requirement |
 |---|---|---|
-| `workspace__create` | Create a branded workspace from a site URL context. Async: returns the workspace in `processing`; poll `workspace__get` until it leaves that state. | Require the user to choose the organization and site context. |
-| `workspace__get` | Read one workspace in any state. | Read-only. |
-| `workspace__activate` | Explicitly activate a workspace. Only active workspaces can manage resources. | Activate only a workspace the user chose. |
-| `brand__get` | Return the workspace's brand profile, its name and knowledge, and whether it is usable. | Read-only. Do not infer its text from `use_brand_knowledge`. |
-| `brand__update` | Replace or patch the approved profile. Return the effective version. | Show the material change before writing it. |
-| `recommendation__list` | Return actionable site recommendations filtered by `optimize` or `write`, each with a stable id, priority, and the context needed to act: page URL and keyword for optimize, main keyword and location for write. | Read-only. Do not silently select one. Priorities compare only within one type, not across types. |
 | `internal_linking__run` | Start an internal-link suggestion run for a Content Editor against a GSC site context. Async trigger; poll `internal_linking__get`. | Needs a configured Content Audit project. Report its absence instead of guessing a site URL. Makes no content change. |
 | `internal_linking__get` | Poll a run: its status, the suggested links with source, target, and anchor, and the updated content once links are inserted. | Read-only. |
 | `internal_linking__insert` | Insert the selected suggestions into the run's content. Async; spends an internal-links credit. | Present the exact links and require approval immediately before inserting. |
@@ -49,19 +50,30 @@ substitute a REST endpoint or a guessed call.
    write it with `brand__update` only with an approved replacement. Do not confuse "enabled for this
    editor" with inspecting the profile.
 
-2. **List, explain, and select a recommendation.** Call `recommendation__list` filtered to
-   `optimize` or `write`. Present the relevant URL or keyword, the priority, and the expected
-   action. An empty list may mean no source is configured; report which of Content Audit or Topical
-   Maps is missing rather than a bare "no recommendations". Let the user choose. Auto-select only
-   when the user states a clear rule, such as "highest priority Optimize recommendation", and rank
-   within one type only.
+2. **List, explain, and select a recommendation.** Call `recommendation__list`, filtered with
+   `type` when the user already chose `optimize` or `write` work. Present each candidate's page URL
+   or keyword and its `score`. Scores order items within one type and are not comparable across
+   types; the default ordering lists optimize items before write items, each block score-descending.
+   An item whose `content_editor_id` is set is already being worked on, so offer to continue it
+   rather than start over. An empty list may mean no source is configured:
+   `meta.content_audit_configured` and `meta.topical_maps_configured` name which of Content Audit
+   or Topical Maps is missing, so report that rather than a bare "no recommendations". Let the user
+   choose. Auto-select only when the user states a clear rule, such as "highest-score optimize
+   recommendation", and rank within one type only.
 
-3. **Run the focused workflow.** There is no execute step; the recommendation carries everything
-   needed to act. For an Optimize recommendation, hand its page URL as the import URL, plus the
-   keyword and location, to `surfer-optimize-content`. For a Write recommendation, hand its main
-   keyword and location to `surfer-write-article`. Before any create, check `content_editor__list`
-   for an editor already covering that page or keyword and reuse it; a create spends a credit, so
-   create once with one logical idempotency key.
+3. **Run the focused workflow.** The recommendation carries everything needed to act, and its
+   `content_editor_id` marks the editor already covering it — never create a second editor for a
+   covered item.
+   - For an *optimize* item, hand its editor to `surfer-optimize-content`, skipping that skill's
+     create step. Use `content_editor_id` when set. Otherwise confirm the spend, then call
+     `recommendation__optimize` — the product's Optimize button. It opens the page's own Content
+     Editor, connected to Content Audit so optimization progress tracks in the product, charges one
+     Content Editor credit unless the page's editor was already paid for, and returns the refreshed
+     item with `content_editor_id` set. Never import the page URL into a fresh editor instead; that
+     disconnects the tracking. A conflict means the editor is already open, so re-list and use its
+     id. A retryable failure means the editor is still being prepared, so wait and retry, bounded.
+   - For a *write* item, continue in the `content_editor_id` editor when set. Otherwise hand its
+     `main_keyword` and `location` to `surfer-write-article`, which creates the editor itself.
 
 4. **Propose internal links before changing content.** Start `internal_linking__run` for the editor,
    poll `internal_linking__get` until the suggestions are ready, and show the proposed source pages,
@@ -79,4 +91,5 @@ substitute a REST endpoint or a guessed call.
 6. **Report the lifecycle.** Return the recommendation selected, the workspace and editor ids, the
    baseline and final score snapshot, the changes made, the inserted links, the WordPress
    destination and status, and every stage skipped because the connected server does not expose its
-   tool.
+   tool. An optimize item's progress also shows in the product: its `optimization_status` and the
+   linked draft's `content_score` update on `recommendation__list`.

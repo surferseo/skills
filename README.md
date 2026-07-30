@@ -44,9 +44,10 @@ skill is needed. The **secondary** transport is the REST API, reached through on
 |---|---|
 | `surfer-api` | REST adapter. Maps each capability ID to a Surfer REST method and path and owns the REST async and poll mechanics: auth, conventions, endpoints, and polling. Fetches live docs for the exact request and response shapes. |
 
-The **extension** capabilities behind the full loop — workspace setup, brand knowledge, site
-recommendations, internal linking, and WordPress publishing — are planned MCP tools and MCP-only by
-design: the REST API does not expose them, so no capability-map row ever binds them.
+The capabilities behind the full loop — workspace setup, brand knowledge, site recommendations,
+internal linking, and WordPress publishing — are MCP-only by design: the REST API does not expose
+them, so no capability-map row ever binds them. The workspace, brand, and recommendation tools are
+live on the MCP server. Internal linking and WordPress publishing are planned;
 `surfer-content-recommendations` owns their contract and reports any stage the connected server does
 not expose yet.
 
