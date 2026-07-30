@@ -44,10 +44,10 @@ skill is needed. The **secondary** transport is the REST API, reached through on
 |---|---|
 | `surfer-api` | REST adapter. Maps each capability ID to a Surfer REST method and path and owns the REST async and poll mechanics: auth, conventions, endpoints, and polling. Fetches live docs for the exact request and response shapes. |
 
-The capabilities behind the recommendation workflow — workspace setup, brand knowledge, and site
-recommendations — are MCP-only by design: the REST API does not expose them, so no capability-map
-row ever binds them. `surfer-content-recommendations` runs those stages only over the MCP server
-and reports them as unavailable without it.
+The capabilities behind the recommendation workflow — brand knowledge and site recommendations —
+are MCP-only by design: the REST API does not expose them, so no capability-map row ever binds
+them. `surfer-content-recommendations` runs those stages only over the MCP server and reports them
+as unavailable without it.
 
 The `surfer-connect` skill sets up a transport for the session. It registers the Surfer MCP server
 in your client, or configures an API key for `surfer-api`. The workflows hand off to it when no

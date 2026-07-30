@@ -6,8 +6,8 @@ description: >-
   webhooks, or idempotency. Capability IDs are the Surfer MCP server's tool names; the MCP server is
   the primary transport, and this skill is the secondary, REST one. It binds each ID to a REST method
   and path and owns the REST async and poll mechanics in capability-map.md. It never implements
-  the MCP-only capabilities: workspace setup, brand knowledge, and site recommendations. An
-  explicit transport pin such as /surfer-api always takes precedence.
+  the MCP-only capabilities: brand knowledge and site recommendations. An explicit transport pin
+  such as /surfer-api always takes precedence.
 license: MIT
 ---
 

@@ -18,22 +18,20 @@ work twice.
 
 ## MCP-only stages
 
-The workspace-setup, brand, and recommendation stages run on MCP-only tools — `workspace__create`,
-`workspace__get`, `workspace__activate`, `brand__get`, `brand__update`, `recommendation__list`, and
-`recommendation__optimize`. The REST API does not expose them, no capability-map row ever binds
-them, and `surfer-api` never runs them. With no Surfer MCP server connected, report those stages as
-unavailable rather than substituting a REST endpoint or a guessed call. The delegated
-`surfer-optimize-content` and `surfer-write-article` runs use either transport as usual. Each tool
-carries its own contract in its MCP description.
+The brand and recommendation stages run on MCP-only tools — `brand__get`, `brand__update`,
+`recommendation__list`, and `recommendation__optimize`. The REST API does not expose them, no
+capability-map row ever binds them, and `surfer-api` never runs them. With no Surfer MCP server
+connected, report those stages as unavailable rather than substituting a REST endpoint or a guessed
+call. The delegated `surfer-optimize-content` and `surfer-write-article` runs use either transport
+as usual. Each tool carries its own contract in its MCP description.
 
 ## Playbook
 
-1. **Establish scope.** Resolve an existing active workspace with `workspace__list`. Create one only
-   when the user asked for it or none is suitable: call `workspace__create`, poll `workspace__get`
-   until the state leaves `processing`, then call `workspace__activate` for the workspace the user
-   confirmed. If brand knowledge must be reviewed or changed, read it with `brand__get` first, and
-   write it with `brand__update` only with an approved replacement. Do not confuse "enabled for this
-   editor" with inspecting the profile.
+1. **Establish scope.** Resolve an active `workspace_id` with `workspace__list`; recommendations
+   are read per workspace. If several workspaces are active, ask the caller which one to use rather
+   than guessing. If none is active, stop and report. If brand knowledge must be reviewed or
+   changed, read it with `brand__get` first, and write it with `brand__update` only with an
+   approved replacement. Do not confuse "enabled for this editor" with inspecting the profile.
 
 2. **List, explain, and select a recommendation.** Call `recommendation__list`, filtered with
    `type` when the user already chose `optimize` or `write` work. Present each candidate's page URL
