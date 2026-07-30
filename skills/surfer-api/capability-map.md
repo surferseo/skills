@@ -4,7 +4,8 @@ The REST binding for every capability ID, plus the REST async and poll semantics
 the Surfer MCP server's tool names. surfer-api is the secondary transport. The Surfer MCP server is
 primary, and when it is connected each tool carries its own description of async behavior, poll
 targets, and status values. A REST caller has no such description in context, so this file supplies
-it.
+it. The MCP-only IDs used by `surfer-content-recommendations` — the brand and recommendation
+tools — have no REST binding.
 
 This file has two parts.
 

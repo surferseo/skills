@@ -86,4 +86,5 @@ the user wants only an outline or a brief, create a manual Content Editor and st
    Score target.
 
 8. **Deliver and hand off.** Return the canonical content, the SEO, AI Search, and unified scores
-   separately, the Content Editor id, and an edit or share link from `permalink__list`.
+   separately, the Content Editor id, and an edit or share link from `permalink__list`. For a
+   recommendation-led workflow, hand control back to `surfer-content-recommendations`.
