@@ -20,11 +20,10 @@ the user wants only an outline or a brief, create a manual Content Editor and st
 ## Prerequisites
 
 - Resolve the transport: with the Surfer MCP server connected, call its tools directly; otherwise
-  run over REST with `surfer-api`; with neither, connect one via `surfer-connect` rather than
-  improvising raw HTTP. REST is usable when an API key is set in the `SURFER_API_KEY` environment
-  variable or the client's secret storage. Check for that key before concluding that no transport
-  exists. The active transport owns auth, call mechanics, and async handling. If a required
-  capability is unsupported, name it and stop.
+  run over REST with `surfer-api`; with neither, connect one via `surfer-connect`. REST is usable
+  when an API key is set in the `SURFER_API_KEY` environment variable or the client's secret
+  storage. Check for that key before concluding that no transport exists. If no transport can run a
+  required capability, name it and stop. Do not improvise raw HTTP or assume an endpoint.
 - Resolve one active `workspace_id` with `workspace__list`. If several workspaces are active, ask
   the caller which `workspace_id` to use rather than guessing.
 - Require `main_keyword` and accept up to 19 secondary keywords. Default the location to United
