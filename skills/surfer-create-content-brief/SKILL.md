@@ -44,8 +44,8 @@ well.
 - Resolve the transport: with the Surfer MCP server connected, call its tools directly; otherwise
   run over REST with `surfer-api`; with neither, connect one via `surfer-connect`. REST is usable
   when an API key is set in the `SURFER_API_KEY` environment variable or the client's secret
-  storage. Check for that key before concluding that no transport exists. Stop at an unsupported
-  capability rather than inventing a route or response shape.
+  storage. Check for that key before concluding that no transport exists. If no transport can run a
+  required capability, name it and stop. Do not improvise raw HTTP or assume an endpoint.
 
 ## Playbook
 
