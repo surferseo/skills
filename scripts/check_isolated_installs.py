@@ -30,3 +30,13 @@ with tempfile.TemporaryDirectory(prefix='surfer-install-all-') as directory:
     source = sorted(p.name for p in (ROOT / 'skills').glob('surfer-*'))
     assert installed == source, (installed, source)
     print(f'All-skills install verified: {len(installed)} skills')
+
+with tempfile.TemporaryDirectory(prefix='surfer-install-subset-') as directory:
+    target = Path(directory)
+    subset = {'surfer-write-article', 'surfer-connect', 'surfer-api'}
+    subprocess.run(CLI + ['add', str(ROOT), '--skill', 'surfer-write-article',
+                          '--skill', 'surfer-connect', '--skill', 'surfer-api',
+                          '--agent', 'codex', '--yes', '--copy'], cwd=target, check=True)
+    installed = {p.name for p in (target / '.agents/skills').glob('surfer-*')}
+    assert installed == subset, (installed, subset)
+    print('Three-skill README subset verified')

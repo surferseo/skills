@@ -42,6 +42,22 @@ for path in paths:
         fail(f'{path}: description must have 1–1024 characters')
     if metadata.get('license') != 'MIT':
         fail(f'{path}: missing MIT license metadata')
+    ui_path = path.parent / 'agents/openai.yaml'
+    try:
+        ui = yaml.safe_load(ui_path.read_text())
+    except (OSError, yaml.YAMLError) as exc:
+        fail(f'{path}: missing or invalid OpenAI UI metadata: {exc}')
+        ui = None
+    interface = ui.get('interface') if isinstance(ui, dict) else None
+    if not isinstance(interface, dict):
+        fail(f'{path}: OpenAI UI metadata needs an interface mapping')
+    else:
+        for field in ('display_name', 'short_description', 'default_prompt'):
+            if not isinstance(interface.get(field), str) or not interface[field].strip():
+                fail(f'{path}: interface.{field} must be a nonempty string')
+        prompt = interface.get('default_prompt')
+        if isinstance(prompt, str) and not re.search(r'\$' + re.escape(path.parent.name) + r'(?![\w-])', prompt):
+            fail(f'{path}: default prompt must invoke its skill name')
     notice = path.parent / 'LICENSE'
     if not notice.exists() or notice.read_bytes() != root_license:
         fail(f'{path}: missing or altered standalone license notice')
