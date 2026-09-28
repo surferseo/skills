@@ -1,0 +1,37 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "surfer",
+  "version": "0.1.0",
+  "description": "Surfer content workflows with a connected Surfer MCP server.",
+  "author": {
+    "name": "Surfer"
+  },
+  "homepage": "https://surferseo.com",
+  "repository": "https://github.com/surferseo/skills",
+  "license": "MIT",
+  "keywords": ["seo", "content", "ai-search"],
+  "extensions": {
+    "com.openai": {
+      "interface": {
+        "displayName": "Surfer",
+        "shortDescription": "Create and optimize content",
+        "longDescription": "Use Surfer workflows and your connected workspace to plan articles, create briefs and drafts, and improve existing content using SEO and AI Search guidance.",
+        "developerName": "Surfer",
+        "category": "Productivity",
+        "capabilities": [
+          "Plan and draft content",
+          "Review SEO and AI Search guidance",
+          "Optimize existing content"
+        ],
+        "websiteURL": "https://surferseo.com",
+        "privacyPolicyURL": "https://surferseo.com/privacy-policy/",
+        "termsOfServiceURL": "https://surferseo.com/legal/regulations/",
+        "defaultPrompt": [
+          "Create a Surfer outline for a keyword in my workspace.",
+          "Prepare a writer-ready content brief with Surfer guidance.",
+          "Help me optimize an existing article using Surfer."
+        ]
+      }
+    }
+  }
+}
