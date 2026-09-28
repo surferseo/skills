@@ -59,7 +59,7 @@ A read such as listing workspaces does not use a Content Editor credit. Creating
 
 If you explicitly request REST or invoke `/surfer-api`, that choice takes precedence even when MCP is connected. Install both the workflow and `surfer-api`. Configure `SURFER_API_KEY` in your own local environment or the client's secret storage; never paste a key into a chat, a repository, or a file that may be committed. The `surfer-connect` skill can guide setup. Use `workspace__list` through the adapter as a read-only verification call. REST cannot run site recommendations or brand knowledge calls; use MCP for those.
 
-The workflows name Surfer MCP capability IDs. With MCP, the connected tools execute them. With REST, [`surfer-api`](skills/surfer-api/SKILL.md) maps supported IDs to documented methods and paths in its [capability map](skills/surfer-api/capability-map.md). The adapter checks Surfer's live [API documentation index](https://app.surferseo.com/llms.txt) for request and response detail. Its capability map and workflow assumptions are maintained in this repository and may need updates when Surfer changes the API. Run the repository checks before a release; live schema lookup is not an automatic compatibility guarantee.
+The workflows name Surfer MCP capability IDs. With MCP, the connected tools execute them. With REST, [`surfer-api`](skills/surfer-api/SKILL.md) maps supported IDs to documented methods and paths in its [capability map](skills/surfer-api/capability-map.md). The adapter checks Surfer's live [API documentation index](https://app.surferseo.com/llms.txt) for request and response detail.
 
 ## Skills in this repository
 
