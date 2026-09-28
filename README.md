@@ -1,6 +1,6 @@
 # Surfer Skills
 
-Use Surfer from an AI assistant to create outlines and briefs, write or optimize articles, manage templates, and act on site recommendations. Each skill is a playbook; it needs a connected Surfer transport to read or change your account. The recommended transport is [Surfer MCP](https://docs.surferseo.com/en/articles/12944186-surfer-mcp), with browser based OAuth sign-in.
+Use Surfer from an AI assistant to create outlines and briefs, write or optimize articles, manage templates, and act on site recommendations. Connect your Surfer account through [Surfer MCP](https://docs.surferseo.com/en/articles/12944186-surfer-mcp) using browser sign-in.
 
 ## Before you start
 
@@ -10,23 +10,23 @@ Use Surfer from an AI assistant to create outlines and briefs, write or optimize
 
 ## Install the skills
 
-Run the [skills CLI](https://skills.sh) in the project where your assistant will use Surfer. The pinned CLI version below makes the commands reproducible. The CLI detects the target agent by default; pass `--agent` when you need to choose one.
+Run the [skills CLI](https://skills.sh) in the project where your assistant will use Surfer. It detects your installed assistants; use `--agent` to select a specific one.
 
 ```bash
 # All eight skills, including setup and REST support
-npx skills@1.7.0 add surferseo/skills --skill '*' -y
+npx skills add surferseo/skills --skill '*' -y
 
 # One workflow is enough when Surfer MCP is already connected
-npx skills@1.7.0 add surferseo/skills --skill surfer-create-outline -y
+npx skills add surferseo/skills --skill surfer-create-outline -y
 
 # A writing workflow with setup and optional REST fallback
-npx skills@1.7.0 add surferseo/skills \
+npx skills add surferseo/skills \
   --skill surfer-write-article --skill surfer-connect --skill surfer-api -y
 ```
 
 You can also [follow the Surfer MCP setup guide](https://docs.surferseo.com/en/articles/12944186-surfer-mcp) without installing this repository's playbooks. Surfer's MCP server supplies its own six workflow skills. Check which version your client invokes if both server supplied and locally installed copies are present.
 
-A single installed workflow contains its essential input defaults and connection guidance. The `surfer-connect` helper and `surfer-api` adapter are separate skills; a workflow installed alone cannot assume either is present. The recommendations skill needs MCP for recommendation and brand calls because REST does not expose them.
+With MCP connected, you can install any workflow on its own. Add `surfer-connect` if you need help connecting your account. For REST access, also install `surfer-api`. Content recommendations require MCP.
 
 ## Connect and verify with OAuth
 
@@ -44,7 +44,7 @@ codex mcp add surfer --url https://mcp.surferseo.com/mcp
 
 In Claude, ChatGPT, Cursor, and other MCP clients, add a remote HTTP connector named Surfer using that URL and choose OAuth. Complete sign-in in the browser and select the right Surfer organization. Connection controls and plan availability vary by client; follow Surfer's current guide for its exact interface.
 
-Start a fresh chat with **“List my Surfer workspaces.”** A list from `workspace__list` confirms the connection without creating content or spending a Content Editor credit. If the tools are absent, check that the connector is enabled in this chat and whether your client needs a restart. If sign-in is refused, check the Surfer account, organization, and plan in the [setup guide](https://docs.surferseo.com/en/articles/12944186-surfer-mcp).
+Start a fresh chat with **“List my Surfer workspaces.”** Seeing your workspaces confirms the connection without creating content or spending a Content Editor credit. If the tools are absent, check that the connector is enabled in this chat and whether your client needs a restart. If sign-in is refused, check the Surfer account, organization, and plan in the [setup guide](https://docs.surferseo.com/en/articles/12944186-surfer-mcp).
 
 ## Try a workflow
 
@@ -53,13 +53,13 @@ Start a fresh chat with **“List my Surfer workspaces.”** A list from `worksp
 - “Optimize my existing article for SEO and report its starting and final Content Score.”
 - “Show my Surfer content recommendations, then let me choose one.” This needs MCP.
 
-A read such as listing workspaces does not use a Content Editor credit. Creating an editor, generating an AI article, and optimization can consume plan limits or credits. The assistant should disclose the planned operations and wait for user direction where a workflow requires it. A score measures Surfer's coverage criteria; it does not guarantee search rankings or AI citations. See [MCP limits](https://devs.surferseo.com/mcp/credits-and-limits) and [Surfer pricing](https://surferseo.com/pricing/) for current terms.
+A read such as listing workspaces does not use a Content Editor credit. Creating an editor, generating an AI article, and optimization can consume plan limits or credits. A score measures Surfer's coverage criteria; it does not guarantee search rankings or AI citations. See [MCP limits](https://devs.surferseo.com/mcp/credits-and-limits) and [Surfer pricing](https://surferseo.com/pricing/) for current terms.
 
 ## Optional REST route
 
-If you explicitly request REST or invoke `/surfer-api`, that choice takes precedence even when MCP is connected. Install both the workflow and `surfer-api`. Configure `SURFER_API_KEY` in your own local environment or the client's secret storage; never paste a key into a chat, a repository, or a file that may be committed. The `surfer-connect` skill can guide setup. Use `workspace__list` through the adapter as a read-only verification call. REST cannot run site recommendations or brand knowledge calls; use MCP for those.
+If you explicitly request REST or invoke `/surfer-api`, that choice takes precedence even when MCP is connected. Install both the workflow and `surfer-api`. Configure `SURFER_API_KEY` in your own local environment or the client's secret storage; never paste a key into a chat, a repository, or a file that may be committed. The `surfer-connect` skill can guide setup. Ask the assistant to list your workspaces to verify the connection. REST cannot run site recommendations or brand knowledge calls; use MCP for those.
 
-The workflows name Surfer MCP capability IDs. With MCP, the connected tools execute them. With REST, [`surfer-api`](skills/surfer-api/SKILL.md) maps supported IDs to documented methods and paths in its [capability map](skills/surfer-api/capability-map.md). The adapter checks Surfer's live [API documentation index](https://app.surferseo.com/llms.txt) for request and response detail.
+See [`surfer-api`](skills/surfer-api/SKILL.md) for supported REST operations and setup details.
 
 ## Skills in this repository
 
@@ -78,4 +78,4 @@ The workflows name Surfer MCP capability IDs. With MCP, the connected tools exec
 
 For Surfer account, plan, or connection issues, use the [Surfer help center](https://docs.surferseo.com/) or the support contact in the [MCP guide](https://docs.surferseo.com/en/articles/12944186-surfer-mcp). Read the [Surfer customer privacy policy](https://surferseo.com/legal/privacy-policy-customers/) before submitting account content. Repository issues can be filed in [GitHub Issues](https://github.com/surferseo/skills/issues).
 
-The skills are MIT licensed. The [root license](LICENSE) is copied into each skill folder so an individually installed skill carries its notice.
+MIT licensed. See [LICENSE](LICENSE).
