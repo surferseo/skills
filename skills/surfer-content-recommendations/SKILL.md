@@ -6,6 +6,7 @@ description: >-
   act on it", and "run the write or optimize workflow from my workspace". It selects
   recommendation-led Optimize or Write work and delegates drafting and optimization to the focused
   Surfer skills.
+license: MIT
 ---
 
 # Surfer: Act on Content Recommendations
@@ -17,11 +18,14 @@ work twice.
 
 ## Prerequisites
 
-- Resolve the transport: with the Surfer MCP server connected, call its tools directly; otherwise
-  run over REST with `surfer-api`; with neither, connect one via `surfer-connect`. REST is usable
-  when an API key is set in the `SURFER_API_KEY` environment variable or the client's secret
-  storage. Check for that key before concluding that no transport exists. If no transport can run a
-  required capability, name it and stop. Do not improvise raw HTTP or assume an endpoint.
+- This workflow requires connected Surfer MCP tools for its recommendation and brand calls.
+  Honor an explicit REST preference by explaining that those calls have no REST binding; offer the
+  OAuth MCP connection at https://mcp.surferseo.com/mcp and
+  https://docs.surferseo.com/en/articles/12944186-surfer-mcp. If `surfer-connect` is installed, use
+  it to guide the setup. This skill also works alone: give the URL and guide the user's own browser
+  sign-in. After an MCP recommendation is selected, a focused workflow may use REST if the user
+  explicitly chooses it and its adapter is installed. Never invent REST endpoints or ask the user
+  to paste a key into chat.
 
 ## Playbook
 

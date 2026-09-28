@@ -35,9 +35,12 @@ Two transports exist, and the workflows run unchanged over either.
 - This skill is the secondary, REST transport. It runs when the MCP server is not connected, or when
   the user pins it explicitly, such as with /surfer-api. A pin wins over the primary default.
 
-If neither is usable, run `surfer-connect`: it registers the MCP server in the current client or
-sets up an API key for this skill, then hands control back. Never fall back to hand-written HTTP
-against guessed endpoints, and do not treat a missing credential as the blocker when the real gap is
+If neither is usable, run `surfer-connect` when installed. With this adapter installed alone,
+guide the user to connect the OAuth MCP server at https://mcp.surferseo.com/mcp using
+https://docs.surferseo.com/en/articles/12944186-surfer-mcp, or configure REST access locally using
+https://docs.surferseo.com/en/articles/5700335-surfer-api-introduction. Never ask for a key in chat.
+Once this adapter is selected, follow its documented REST mechanics. Never fall back to
+hand-written HTTP against guessed endpoints, and do not treat a missing credential as the blocker when the real gap is
 a missing transport.
 
 The active transport owns everything mechanical: authentication, workspace scoping on the wire,
@@ -46,10 +49,13 @@ schema lookup before a call. Workflows name capability IDs only and never restat
 
 ## Prerequisites
 
-1. **Get an API key** from the Surfer app's organization API settings.
+1. **Get REST access and an API key.** Surfer documents REST access for Peace of Mind and
+   Enterprise accounts; the account owner can request a key through Surfer support. See
+   https://docs.surferseo.com/en/articles/5700335-surfer-api-introduction.
 2. **Send `API-KEY: <key>`** on every request. All contract capabilities are authenticated. If no
-   API key is configured, stop and ask the user for it before the first call; `surfer-connect`
-   covers obtaining and storing one. Never fabricate one or fire a blind request. This credential
+   API key is configured, stop and guide the user to store it in `SURFER_API_KEY` or client secret
+   storage before the first call; `surfer-connect` covers the setup when installed. Never ask them
+   to paste the key into chat. Never fabricate one or fire a blind request. This credential
    gate is separate from transport resolution. Reach it only once a transport is resolved.
 3. **Resolve a `workspace_id`.** Most v2 resources are workspace-scoped. List workspaces with
    `workspace__list` and use one whose `state` is `active`, since only active workspaces can manage

@@ -19,11 +19,15 @@ or AI Search targets the user cares about.
 
 ## Prerequisites
 
-- Resolve the transport: with the Surfer MCP server connected, call its tools directly; otherwise
-  run over REST with `surfer-api`; with neither, connect one via `surfer-connect`. REST is usable
-  when an API key is set in the `SURFER_API_KEY` environment variable or the client's secret
-  storage. Check for that key before concluding that no transport exists. If no transport can run a
-  required capability, name it and stop. Do not improvise raw HTTP or assume an endpoint.
+- Select a transport before tool calls. Honor an explicit REST choice (including `/surfer-api`)
+  even if MCP is connected. Otherwise use connected Surfer MCP tools; use REST only when the
+  `surfer-api` adapter is installed and an API key is already available in `SURFER_API_KEY` or
+  client secret storage. A key alone does not supply the REST adapter. If neither path is ready,
+  use `surfer-connect` when installed. With this skill installed alone, guide the user to connect
+  the documented OAuth MCP server at https://mcp.surferseo.com/mcp (see
+  https://docs.surferseo.com/en/articles/12944186-surfer-mcp), or install `surfer-api` plus
+  `surfer-connect` for REST. If a required capability is unavailable, name it and stop; never
+  invent HTTP calls or ask the user to paste a key into chat.
 - Resolve an active `workspace_id` with `workspace__list`. If several workspaces are active, ask
   the caller which `workspace_id` to use rather than guessing.
 - Require a target keyword and either an import URL or raw HTML or Markdown. Ask for a missing
