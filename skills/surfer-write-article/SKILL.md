@@ -72,7 +72,9 @@ the user wants only an outline or a brief, create a manual Content Editor and st
    active, paused, or complete. If it failed, report the failure before deciding on a new run. Call
    `ai_article__generate` only when no applicable article exists. After a lost response or `409`,
    inspect the list again; a REST `409` can include `active_article_id` in `error.details[0]`.
-   Rejoin that article rather than repeating the POST. On `waiting_for_user_input`, fetch
+   Rejoin an identifiable article rather than repeating the POST. If the response was lost and
+   bounded list/read-back checks still show no identifiable article, report generation as
+   indeterminate and stop without another generation request. On `waiting_for_user_input`, fetch
    `ai_article__get_outline`, present it, and submit only the user-approved version with
    `ai_article__submit_outline`. While it is `new`, `generating_outline`, or `writing`, wait. On
    `failed`, report and stop. The SERP outline or brief from an earlier handoff remains planning

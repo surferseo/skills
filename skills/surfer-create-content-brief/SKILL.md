@@ -59,9 +59,11 @@ well.
 3. **Collect the brief inputs:**
    - `outline__get`, always returned as Markdown.
    - `seo_guidelines__get`, the SEO brief with structure targets, terms, topics, and questions.
-   - `ai_search_guidelines__list_facts` for the source-attributed facts. Also read
-     `content_score__get` to report whether the `ai_search` analysis is ready, but do not use it to
-     grade an empty draft.
+   - `ai_search_guidelines__list_facts` for the source-attributed facts. Use its `meta.status` to
+     report analysis readiness: wait with a bound while `executing`, use `data` once `completed`,
+     and report `failed` or a timeout without inventing facts. The separate AI Search score may be
+     read when needed, but its `ready` status does not establish facts analysis completion; do not
+     use a score to grade an empty draft.
 
    If the outline is pending, wait on `outline.status`. `outline__regenerate` rebuilds it from the
    SERP competitors with the current template, instructions, and brand knowledge. Use it after an
