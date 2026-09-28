@@ -1,0 +1,13 @@
+{
+  "name": "surfer",
+  "displayName": "Surfer",
+  "version": "0.1.0",
+  "description": "Create and optimize content with Surfer workflows and your connected Surfer workspace.",
+  "author": {
+    "name": "Surfer"
+  },
+  "homepage": "https://surferseo.com",
+  "repository": "https://github.com/surferseo/skills",
+  "license": "MIT",
+  "keywords": ["seo", "content", "ai-search"]
+}
