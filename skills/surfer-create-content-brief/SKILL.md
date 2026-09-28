@@ -81,5 +81,7 @@ well.
    unavailable or incomplete AI Search analysis rather than fabricating facts.
 
 6. **Hand off deliberately.** Stop after the brief unless the user also asks for drafting. Pass the
-   accepted outline and brief to `surfer-write-article`. Do not automatically start
+   `content_editor_id`, `workspace_id`, keyword, accepted outline, and brief to
+   `surfer-write-article` so it reuses the analyzed editor. The outline is planning context; the
+   writer's optional AI outline review is a separate step. Do not automatically start
    `ai_article__generate`.

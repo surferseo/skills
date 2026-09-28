@@ -52,10 +52,13 @@ work twice.
      Editor, connected to Content Audit so optimization progress tracks in the product, charges one
      Content Editor credit unless the page's editor was already paid for, and returns the refreshed
      item with `content_editor_id` set. Never import the page URL into a fresh editor instead; that
-     disconnects the tracking. A conflict means the editor is already open, so re-list and use its
-     id. A retryable failure means the editor is still being prepared, so wait and retry, bounded.
-   - For a *write* item, continue in the `content_editor_id` editor when set. Otherwise hand its
-     `main_keyword` and `location` to `surfer-write-article`, which creates the editor itself.
+     disconnects the tracking. On a conflict or unclear response, re-list the recommendation first
+     and use its editor id if present. If the editor is still being prepared, wait and re-read with a
+     bound; do not open the recommendation again while the outcome is unclear.
+   - For a *write* item, pass its `content_editor_id`, `workspace_id`, `main_keyword`, and `location`
+     to `surfer-write-article` when the id is set. The writer verifies and reuses that editor before
+     considering generation. Without an id, pass the keyword and location; the writer checks for
+     existing work before creating an editor.
 
 4. **Report the lifecycle.** Return the recommendation selected, the workspace and editor ids, the
    baseline and final score snapshot, and the changes made. An optimize item's progress also shows

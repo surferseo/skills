@@ -72,13 +72,21 @@ and state. Never poll indefinitely.
 
 4. **Read only the guidance needed.** For SEO, read `seo_guidelines__get`, one brief that carries the
    structure targets, terms, topics, questions, and competitors. For AI Search, read the facts with
-   `ai_search_guidelines__list_facts`. `ai_search_guidelines__get` returns the same facts plus the
-   score, its status, and the fact count. Retain every fact's source URL and `cited_by` context.
+   `ai_search_guidelines__list_facts`. Its `meta.status` is analysis state: `completed` makes `data`
+   final, while `executing` means wait and `failed` means report failure. The separate
+   `ai_search` score reaches `ready` on its own lifecycle. `ai_search_guidelines__get` returns the
+   facts plus analysis status, score snapshot, and fact count. Retain every fact's source URL and
+   `cited_by` context.
 
 5. **Choose an optimization path**, and ask when the user has no preference.
-   - Auto-optimize runs `auto_optimize__run`, which changes the editor directly. Poll
-     `auto_optimize__get` by job id. Treat `optimized` and `nothing_to_optimize` as completed
-     results. Stop on a `failed` state. A quota problem surfaces as a 422 when starting the run.
+   - Before Auto-Optimize, inspect the editor's latest job when that read is available on the active
+     transport. Rejoin an applicable active job instead of starting another. `auto_optimize__run`
+     changes the editor directly; poll `auto_optimize__get` by job id. If the start response is lost,
+     read the latest job again and compare its id or creation time with the prior job. Continue a new
+     job found there. If the outcome stays unclear after bounded reads, report it as indeterminate;
+     do not automatically repeat the run, since each accepted start can spend a credit and cancel
+     the earlier job. Treat `optimized` and `nothing_to_optimize` as completed results. Stop on a
+     `failed` state. A quota problem surfaces as a 422 when starting the run.
    - A guided edit revises the draft against the selected guidelines, without keyword stuffing or
      unsupported claims, then calls `content__update`. Preserve source attribution for AI Search
      facts, and re-fetch the canonical stored body with `content__get` because Surfer sanitizes it.
@@ -86,9 +94,10 @@ and state. Never poll indefinitely.
 6. **Recalculate and compare.** After either path, re-read the stored content and all selected scores
    with `content_score__get`. After a direct content update, trust a subscore only once its `status`
    is `ready` and its `calculated_at` has advanced past the pre-mutation value. A `loading` or
-   `calculating` status may still carry the stale score. The `total` has no `calculated_at`, so
-   gate it on `status` alone. If AI Search reports `error` or `unavailable`, report why and do not
-   claim the combined target was reached.
+   `calculating` status may still carry the stale score. The `total` is a numeric snapshot with no
+   `status` or `calculated_at`; re-read it after the selected scores settle and label it indeterminate
+   if freshness cannot be established. If AI Search reports `error` or `unavailable`, report why and
+   do not claim the combined target was reached.
 
 7. **Iterate with a stopping rule.** Address the largest remaining SEO or AI Search gap, then repeat
    steps 4 to 6. Stop when every selected target is met, when auto-optimize reports
