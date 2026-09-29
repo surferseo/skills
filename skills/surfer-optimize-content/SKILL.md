@@ -72,21 +72,22 @@ and state. Never poll indefinitely.
 
 4. **Read only the guidance needed.** For SEO, read `seo_guidelines__get`, one brief that carries the
    structure targets, terms, topics, questions, and competitors. For AI Search, read the facts with
-   `ai_search_guidelines__list_facts`. Its `meta.status` is analysis state: `completed` makes `data`
-   final, while `executing` means wait and `failed` means report failure. The separate
-   `ai_search` score reaches `ready` on its own lifecycle. `ai_search_guidelines__get` returns the
-   facts plus analysis status, score snapshot, and fact count. Retain every fact's source URL and
-   `cited_by` context.
+   `ai_search_guidelines__list_facts`. Check the analysis readiness reported by the MCP tool: wait
+   with a bound while analysis runs, and report failure or a timeout instead of treating incomplete
+   facts as final. The separate `ai_search` score reaching `ready` does not establish facts analysis
+   completion. `ai_search_guidelines__get` returns the facts plus the score, its status, and the fact
+   count. Retain every fact's source URL and `cited_by` context.
 
 5. **Choose an optimization path**, and ask when the user has no preference.
-   - Before Auto-Optimize, inspect the editor's latest job when that read is available on the active
-     transport. Rejoin an applicable active job instead of starting another. `auto_optimize__run`
-     changes the editor directly; poll `auto_optimize__get` by job id. If the start response is lost,
-     read the latest job again and compare its id or creation time with the prior job. Continue a new
-     job found there. If the outcome stays unclear after bounded reads, report it as indeterminate;
-     do not automatically repeat the run, since each accepted start can spend a credit and cancel
-     the earlier job. Treat `optimized` and `nothing_to_optimize` as completed results. Stop on a
-     `failed` state. A quota problem surfaces as a 422 when starting the run.
+   - Before Auto-Optimize, inspect any known job with `auto_optimize__get`. Look up the editor's
+     latest job if the connected MCP tools support it. Rejoin an applicable active job instead of
+     starting another. `auto_optimize__run` changes the editor directly; poll `auto_optimize__get`
+     by job id. If the start response is lost, use a returned job id or the supported latest-job
+     lookup to identify the run; compare with the prior job so an older result cannot stand in for
+     this attempt. If no lookup is available or bounded reads cannot establish the outcome, report
+     it as indeterminate and stop. Do not automatically repeat the run, since each accepted start
+     can spend a credit and cancel the earlier job. Treat `optimized` and `nothing_to_optimize` as
+     completed results. Stop on a `failed` state or a quota error reported by the tool.
    - A guided edit revises the draft against the selected guidelines, without keyword stuffing or
      unsupported claims, then calls `content__update`. Preserve source attribution for AI Search
      facts, and re-fetch the canonical stored body with `content__get` because Surfer sanitizes it.

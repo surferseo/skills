@@ -57,8 +57,8 @@ work twice.
      bound; do not open the recommendation again while the outcome is unclear.
    - For a *write* item, pass its `content_editor_id`, `workspace_id`, `main_keyword`, and `location`
      to `surfer-write-article` when the id is set. The writer verifies and reuses that editor before
-     considering generation. Without an id, pass the keyword and location; the writer checks for
-     existing work before creating an editor.
+     considering generation. Without an editor id, pass the workspace id, keyword, and location;
+     the writer checks for existing work before creating an editor.
 
 4. **Report the lifecycle.** Return the recommendation selected, the workspace and editor ids, the
    baseline and final score snapshot, and the changes made. An optimize item's progress also shows

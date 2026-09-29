@@ -21,8 +21,9 @@ the user wants only an outline or a brief, create a manual Content Editor and st
 
 - Require connected Surfer MCP tools. For setup or connection failures, use `surfer-connect`;
   ask to install it if missing. If a required tool is unavailable, name it and stop.
-- Resolve one active `workspace_id` with `workspace__list`. If several workspaces are active, ask
-  the caller which `workspace_id` to use rather than guessing.
+- Use the `workspace_id` supplied by the user or the handoff, and verify it is active with
+  `workspace__list`. If none was supplied, use the sole active workspace or ask the caller to
+  choose when several are active.
 - Accept an existing `content_editor_id` as a first-class input, especially from a recommendation,
   outline, or brief handoff. Require `main_keyword` for a new editor; for an existing editor, read
   its keyword and accept up to 19 secondary keywords. Default the location to United States and the
@@ -70,9 +71,9 @@ the user wants only an outline or a brief, create a manual Content Editor and st
 5. **Rejoin or generate the AI article.** Read `ai_article__list` for this editor before a generation
    request. If an article exists, inspect it with `ai_article__get` and continue that job when it is
    active, paused, or complete. If it failed, report the failure before deciding on a new run. Call
-   `ai_article__generate` only when no applicable article exists. After a lost response or `409`,
-   inspect the list again; a REST `409` can include `active_article_id` in `error.details[0]`.
-   Rejoin an identifiable article rather than repeating the POST. If the response was lost and
+   `ai_article__generate` only when no applicable article exists. After a lost response or a
+   conflict reported by the MCP tool, inspect the list again and use any article id returned by the
+   tool to identify existing work. Rejoin an identifiable article instead of generating again. If
    bounded list/read-back checks still show no identifiable article, report generation as
    indeterminate and stop without another generation request. On `waiting_for_user_input`, fetch
    `ai_article__get_outline`, present it, and submit only the user-approved version with

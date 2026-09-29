@@ -59,9 +59,9 @@ well.
 3. **Collect the brief inputs:**
    - `outline__get`, always returned as Markdown.
    - `seo_guidelines__get`, the SEO brief with structure targets, terms, topics, and questions.
-   - `ai_search_guidelines__list_facts` for the source-attributed facts. Use its `meta.status` to
-     report analysis readiness: wait with a bound while `executing`, use `data` once `completed`,
-     and report `failed` or a timeout without inventing facts. The separate AI Search score may be
+   - `ai_search_guidelines__list_facts` for the source-attributed facts. Check the analysis readiness
+     reported by the MCP tool: wait with a bound while analysis runs, use the facts once complete,
+     and report failure or a timeout without inventing facts. The separate AI Search score may be
      read when needed, but its `ready` status does not establish facts analysis completion; do not
      use a score to grade an empty draft.
 
