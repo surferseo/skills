@@ -94,10 +94,9 @@ and state. Never poll indefinitely.
 6. **Recalculate and compare.** After either path, re-read the stored content and all selected scores
    with `content_score__get`. After a direct content update, trust a subscore only once its `status`
    is `ready` and its `calculated_at` has advanced past the pre-mutation value. A `loading` or
-   `calculating` status may still carry the stale score. The `total` is a numeric snapshot with no
-   `status` or `calculated_at`; re-read it after the selected scores settle and label it indeterminate
-   if freshness cannot be established. If AI Search reports `error` or `unavailable`, report why and
-   do not claim the combined target was reached.
+   `calculating` status may still carry the stale score. The `total` has no `calculated_at`, so
+   gate it on `status` alone. If AI Search reports `error` or `unavailable`, report why and do not
+   claim the combined target was reached.
 
 7. **Iterate with a stopping rule.** Address the largest remaining SEO or AI Search gap, then repeat
    steps 4 to 6. Stop when every selected target is met, when auto-optimize reports
