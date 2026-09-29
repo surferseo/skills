@@ -18,14 +18,10 @@ work twice.
 
 ## Prerequisites
 
-- This workflow requires connected Surfer MCP tools for its recommendation and brand calls.
-  Honor an explicit REST preference by explaining that those calls have no REST binding; offer the
-  OAuth MCP connection at https://mcp.surferseo.com/mcp and
-  https://docs.surferseo.com/en/articles/12944186-surfer-mcp. If `surfer-connect` is installed, use
-  it to guide the setup. This skill also works alone: give the URL and guide the user's own browser
-  sign-in. After an MCP recommendation is selected, a focused workflow may use REST if the user
-  explicitly chooses it and its adapter is installed. Never invent REST endpoints or ask the user
-  to paste a key into chat.
+- Recommendation and brand calls require connected Surfer MCP tools. If the user requires
+  REST, report those capabilities as unavailable and stop. For MCP setup or connection failures,
+  use `surfer-connect`; ask to install it if missing. After selection, a focused workflow may
+  use REST when the user chooses it and its adapter is ready.
 
 ## Playbook
 

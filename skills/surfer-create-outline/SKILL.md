@@ -38,15 +38,10 @@ truth. Do not invoke `ai_article__generate` unless the user changes the request 
   `surfer_template`. Omitting `custom_voice_id` applies the workspace default voice. To honor a
   request for no voice, send `custom_voice_id: null`. Competitors are changed with
   `seo_guidelines__update_competitors` after initialization.
-- Select a transport before tool calls. Honor an explicit REST choice (including `/surfer-api`)
-  even if MCP is connected. Otherwise use connected Surfer MCP tools; use REST only when the
-  `surfer-api` adapter is installed and an API key is already available in `SURFER_API_KEY` or
-  client secret storage. A key alone does not supply the REST adapter. If neither path is ready,
-  use `surfer-connect` when installed. With this skill installed alone, guide the user to connect
-  the documented OAuth MCP server at https://mcp.surferseo.com/mcp (see
-  https://docs.surferseo.com/en/articles/12944186-surfer-mcp), or install `surfer-api` plus
-  `surfer-connect` for REST. If a required capability is unavailable, name it and stop; never
-  invent HTTP calls or ask the user to paste a key into chat.
+- Honor an explicit REST choice (including `/surfer-api`). Otherwise prefer connected MCP,
+  then configured `surfer-api`. REST needs the adapter installed and credentials available.
+  Delegate setup or connection failures to `surfer-connect`, preserving the chosen transport;
+  ask to install it if missing. Stop and report unsupported capabilities.
 
 ## Playbook
 
