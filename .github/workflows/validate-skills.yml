@@ -25,7 +25,7 @@ jobs:
         run: for skill in skills/*/; do skills-ref validate "$skill"; done
 
   openai:
-    name: OpenAI skill validator and packaging
+    name: OpenAI skill validator
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -37,8 +37,6 @@ jobs:
         run: curl -sSfL "https://raw.githubusercontent.com/openai/skills/${OPENAI_SKILLS_SHA}/skills/.system/skill-creator/scripts/quick_validate.py" -o /tmp/quick_validate.py
       - name: quick_validate.py
         run: for skill in skills/*/; do python /tmp/quick_validate.py "$skill"; done
-      - name: agents/openai.yaml, licenses, relative links
-        run: python scripts/check_packaging.py
 
   claude:
     name: Claude plugin validator
@@ -52,19 +50,20 @@ jobs:
       - name: claude plugin validate --strict
         run: claude plugin validate . --strict
 
-  skills-cli:
-    name: skills CLI installs
+  packaging:
+    name: Packaging (openai.yaml, licenses, links, skills CLI installs)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: agents/openai.yaml, per-skill LICENSE, relative links
+        run: npm run check:packaging
       - name: Install every skill into empty Codex and Claude Code projects
-        run: python scripts/check_isolated_installs.py
+        run: npm run check:installs
 
   links:
     name: External links
@@ -72,9 +71,10 @@ jobs:
     continue-on-error: true
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-node@v4
         with:
-          python-version: '3.12'
-      - run: python -m pip install 'PyYAML==6.0.2'
+          node-version: '22'
+          cache: npm
+      - run: npm ci
       - name: Confirm every documented URL answers
-        run: python scripts/check_packaging.py --links
+        run: npm run check:links
