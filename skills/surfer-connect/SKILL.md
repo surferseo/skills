@@ -12,79 +12,48 @@ license: MIT
 
 # Surfer: Connect a Transport
 
-## Overview
+Set up a usable Surfer connection, verify it, and return to the interrupted workflow. Preserve
+an explicit MCP or REST choice from the caller; prefer MCP when neither was selected.
 
-Get a usable Surfer transport for this session. The `surfer-*` workflows hand off here when
-transport resolution finds nothing usable. Two outcomes are possible: the Surfer MCP server
-connected in the client, which is primary, or an API key configured for `surfer-api`, which is
-secondary. Prefer MCP unless the user pins REST, the client cannot register MCP servers, or the MCP
-path fails on plan or availability.
+## MCP setup
 
-The MCP server is remote, served over streamable HTTP with OAuth 2.1. Connecting installs nothing:
-the client registers one URL and the user completes a browser sign-in.
+Use the [Surfer MCP overview](https://devs.surferseo.com/mcp/overview) and
+[quickstart](https://devs.surferseo.com/mcp/quickstart) as the source of truth for requirements.
+Detect the current client and read its guide before configuring it; ask which client only when
+it cannot be determined. Follow that guide's current endpoint, sign-in, and verification steps.
 
-## Ground rules
-
-- Edit a client config file only with the user's approval, and show the exact change first.
-- Never write an API key into a file that could be committed. Prefer the client's secret storage or
-  an environment variable.
-- Never fabricate a server URL or an API key. When a step needs a value only Surfer or the user can
-  provide, ask for that one value.
-- OAuth happens in the user's browser. Do not proxy, script, or ask for the credentials behind it.
-
-## MCP path (primary)
-
-The connection URL comes from Surfer's MCP documentation or the Surfer app's MCP settings.
-
-Dispatch on the client actually running this session, and ask which client is in use if it cannot
-be detected. If the URL is not known in this session, ask the user for it rather than guessing. In
-that same message, preview the steps from the client's table row so the user does not need a
-second round trip.
-
-The table is a starting point, not a spec. Client MCP surfaces change faster than this skill, so
-before applying a row, verify it against the client's current documentation or the client's own
-help — `claude mcp add --help`, `codex mcp --help`, the in-app connector settings — and prefer what
-the client itself reports over this table. Handle a client the table does not list the same way:
-look up how it registers a remote MCP server rather than declaring it unsupported.
-
-| Client | Starting point |
+| Client | Setup guide |
 |---|---|
-| Claude Code | Run `claude mcp add --transport http surfer <url>`, then have the user run `/mcp` and complete the sign-in. No restart needed. |
-| Claude Desktop / claude.ai | Settings → Connectors → add a custom connector with the URL. On Team and Enterprise plans this can require an org admin. Reload afterward. |
-| ChatGPT | Settings → Connectors → add a custom connector with the URL. Custom MCP connectors may require enabling developer mode under the connector settings, and availability is plan-dependent. |
-| Codex | Run `codex mcp add surfer --url <url>`, or add an `[mcp_servers.surfer]` entry with the URL to `~/.codex/config.toml`. |
-| Cursor | Add `{"mcpServers": {"surfer": {"url": "<url>"}}}` to `.cursor/mcp.json` (project) or `~/.cursor/mcp.json` (global). |
-| VS Code | Add `{"servers": {"surfer": {"type": "http", "url": "<url>"}}}` to `.vscode/mcp.json`. |
-| Anything else | Register a remote, streamable-HTTP MCP server named `surfer` with the URL in the client's MCP settings, then complete the OAuth prompt. |
+| Claude Code | https://devs.surferseo.com/mcp/connect/claude-code |
+| Claude web or desktop | https://devs.surferseo.com/mcp/connect/claude |
+| ChatGPT web | https://devs.surferseo.com/mcp/connect/chatgpt-web |
+| ChatGPT desktop (Work) | https://devs.surferseo.com/mcp/connect/chatgpt-desktop |
+| Codex CLI or IDE | https://devs.surferseo.com/mcp/connect/codex |
+| Cursor | https://devs.surferseo.com/mcp/connect/cursor |
+| VS Code | https://devs.surferseo.com/mcp/connect/vs-code |
+| Other clients | https://devs.surferseo.com/mcp/connect/other |
 
-Some clients load MCP servers only at startup. When that applies, say so, let the user restart, and
-expect the task to be re-requested rather than promising to resume this session.
+Use the client's normal connector settings or CLI. Show a manual configuration edit before
+applying it. The user completes OAuth in their browser; never request their sign-in credentials.
 
-## Verify
+## REST setup
 
-Registration alone is not success. Confirm the session lists the Surfer tools, names like
-`workspace__list` and `content_editor__create`, and optionally call `server__info` as a no-op
-check. If tools are missing after a completed sign-in, re-check the URL and whether the client
-needs a restart, and report exactly what is missing.
+1. Ensure `surfer-api` is installed. Use the [Surfer API introduction](https://docs.surferseo.com/en/articles/5700335-surfer-api-introduction)
+   for current account eligibility and how to obtain an API key.
+2. Have the user configure the key in client secret storage or `SURFER_API_KEY` in their local
+   environment. Never ask them to paste it into chat or write it into a repository.
+3. Verify through `surfer-api` with `workspace__list`; leave request mechanics to that adapter.
 
-## API-key path (secondary)
+## Verify and return
 
-1. The user creates or copies an API key in the Surfer app, under the organization's API settings.
-2. Store it where the session can read it, such as a `SURFER_API_KEY` environment variable or the
-   client's secret storage, with approval and never in a committed file.
-3. Verify with one call through `surfer-api`: `workspace__list` should return the organization's
-   workspaces.
-4. From here `surfer-api` owns the REST mechanics.
+For MCP, confirm that Surfer tools are available and `workspace__list` succeeds. Registration
+alone is not success; if a restart is required, report setup as pending until the tools are usable.
+For REST, an authenticated `workspace__list` through `surfer-api` verifies the connection.
 
-## Plan and availability failures
+For MCP connection errors, follow [troubleshooting](https://devs.surferseo.com/mcp/troubleshooting);
+for MCP access or quota issues, consult [credits and limits](https://devs.surferseo.com/mcp/credits-and-limits).
+For REST, report a `401` as missing or invalid credentials and a `403` as an access problem.
+Offer another transport only when available, and preserve an explicit user choice.
 
-- The MCP path can return two distinct 403s. A plan-entitlement 403 reads "not available on your
-  current plan". A rollout 403 reads "MCP access is not yet enabled for this organization". Report
-  to the user which one occurred. For the plan-entitlement 403, offer the API-key path instead.
-- On the API-key path, a `401` means the key is missing or wrong; a `403` means the plan or
-  permissions deny it. Report the difference rather than retrying in a loop.
-
-## Hand back
-
-Once a transport verifies, return to the workflow that was interrupted and continue from its
-transport-resolution step. If the user only asked to connect, report what is now usable and stop.
+After verification, resume the interrupted workflow from transport resolution. If the user only
+asked to connect, report what is usable and stop.

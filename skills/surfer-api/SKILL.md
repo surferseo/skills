@@ -3,11 +3,9 @@ name: surfer-api
 description: >-
   Surfer's REST adapter. Use it to run a Surfer capability over the HTTP API, when a surfer-*
   workflow runs over REST, or when the user mentions the Surfer API, an API key, an endpoint or path,
-  webhooks, or idempotency. Capability IDs are the Surfer MCP server's tool names; the MCP server is
-  the primary transport, and this skill is the secondary, REST one. It binds each ID to a REST method
-  and path and owns the REST async and poll mechanics in capability-map.md. It never implements
-  the MCP-only capabilities: brand knowledge and site recommendations. An explicit transport pin
-  such as /surfer-api always takes precedence.
+  webhooks, or idempotency. It maps supported capability IDs to REST methods and paths and owns
+  authentication, async jobs, and polling in capability-map.md. Brand knowledge and site
+  recommendations are unavailable over REST. An explicit /surfer-api request selects this adapter.
 license: MIT
 ---
 
@@ -25,33 +23,12 @@ path, and it owns the REST async and poll semantics. Both live in `capability-ma
 reference matters here because a REST caller has no tool descriptions in context. It cannot
 otherwise tell which operations are asynchronous or which GET to poll.
 
-## Transport selection
-
-Two transports exist, and the workflows run unchanged over either.
-
-- The Surfer MCP server is primary. When its tools are connected this session, call them directly.
-  Its tool names are the capability IDs, and each tool carries its own description of inputs, async
-  behavior, and poll target.
-- This skill is the secondary, REST transport. It runs when the MCP server is not connected, or when
-  the user pins it explicitly, such as with /surfer-api. A pin wins over the primary default.
-
-If neither is usable, run `surfer-connect`: it registers the MCP server in the current client or
-sets up an API key for this skill, then hands control back. Never fall back to hand-written HTTP
-against guessed endpoints, and do not treat a missing credential as the blocker when the real gap is
-a missing transport.
-
-The active transport owns everything mechanical: authentication, workspace scoping on the wire,
-idempotency, the async/poll or webhook mechanics, error taxonomy, rate limits, pagination, and any
-schema lookup before a call. Workflows name capability IDs only and never restate those.
-
 ## Prerequisites
 
-1. **Get an API key** from the Surfer app's organization API settings.
-2. **Send `API-KEY: <key>`** on every request. All contract capabilities are authenticated. If no
-   API key is configured, stop and ask the user for it before the first call; `surfer-connect`
-   covers obtaining and storing one. Never fabricate one or fire a blind request. This credential
-   gate is separate from transport resolution. Reach it only once a transport is resolved.
-3. **Resolve a `workspace_id`.** Most v2 resources are workspace-scoped. List workspaces with
+1. **Check REST access and credentials.** Use `SURFER_API_KEY` or the client's secret storage.
+   For setup or authentication problems, delegate to `surfer-connect` with REST selected;
+   ask to install it if missing. Never ask for a key in chat or send an unauthenticated request.
+2. **Resolve a `workspace_id`.** Most v2 resources are workspace-scoped. List workspaces with
    `workspace__list` and use one whose `state` is `active`, since only active workspaces can manage
    resources. If exactly one is active, use it. If several are active, ask the caller for the
    `workspace_id` rather than guessing. If none are active, stop and report, because no resource

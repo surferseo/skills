@@ -22,9 +22,10 @@ well.
 
 ## Inputs and setup
 
-- Require `main_keyword` and ask for it when missing. Resolve the workspace and set location and
-  device as in `surfer-create-outline`. If several workspaces are active, ask the caller which
-  `workspace_id` to use rather than guessing.
+- Require `main_keyword` and ask for it when missing. Use the user's `location` and `device`,
+  otherwise default to United States and mobile. Accept a `workspace_id` or call `workspace__list`
+  and choose the sole active workspace. If several are active, ask the caller which one to use;
+  if none is active, stop and report that resource operations are unavailable.
 - Reuse an existing `content_editor_id` when it matches the intended keyword and scope. Otherwise
   create one. A `content_editor__create` call with only a keyword yields a manual editor. AI
   drafting starts only when `ai_article__generate` is called. A create consumes a credit, so pass
@@ -41,11 +42,10 @@ well.
   `custom_template_id` without supplying a `surfer_template`. Omitting `custom_voice_id` applies
   the workspace default voice. To honor a request for no voice, send `custom_voice_id: null`.
   Competitors change through `seo_guidelines__update_competitors` after initialization.
-- Resolve the transport: with the Surfer MCP server connected, call its tools directly; otherwise
-  run over REST with `surfer-api`; with neither, connect one via `surfer-connect`. REST is usable
-  when an API key is set in the `SURFER_API_KEY` environment variable or the client's secret
-  storage. Check for that key before concluding that no transport exists. If no transport can run a
-  required capability, name it and stop. Do not improvise raw HTTP or assume an endpoint.
+- Honor an explicit REST choice (including `/surfer-api`). Otherwise prefer connected MCP,
+  then configured `surfer-api`. REST needs the adapter installed and credentials available.
+  Delegate setup or connection failures to `surfer-connect`, preserving the chosen transport;
+  ask to install it if missing. Stop and report unsupported capabilities.
 
 ## Playbook
 
