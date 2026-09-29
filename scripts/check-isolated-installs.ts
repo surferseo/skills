@@ -1,6 +1,6 @@
 /**
  * Install the skills with the skills CLI into empty projects and compare the copies
- * file by file against skills/. Override the CLI with SKILLS_CLI, for example
+ * byte for byte against skills/. Override the CLI with SKILLS_CLI, for example
  * SKILLS_CLI="npx --yes skills@1.7.0".
  */
 import { execFileSync } from 'node:child_process';
@@ -10,71 +10,51 @@ import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const [cliCommand, ...cliArgs] = (process.env.SKILLS_CLI ?? 'npx --yes skills@1.7.0').split(/\s+/);
-const SOURCE_SKILLS = readdirSync(join(ROOT, 'skills'), { withFileTypes: true })
-  .filter((entry) => entry.isDirectory())
-  .map((entry) => entry.name)
-  .sort();
+const [cli, ...cliArgs] = (process.env.SKILLS_CLI ?? 'npx --yes skills@1.7.0').split(/\s+/);
 const AGENT_DIRS: Record<string, string> = { codex: '.agents/skills', 'claude-code': '.claude/skills' };
 
-const assert = (condition: boolean, ...context: unknown[]): void => {
-  if (!condition) {
-    console.error(...context);
-    process.exit(1);
-  }
-};
+function fail(...context: unknown[]): never {
+  console.error(...context);
+  process.exit(1);
+}
 
-function filesUnder(dir: string): string[] {
-  return readdirSync(dir, { withFileTypes: true, recursive: true })
+// Sorted relative paths of every file under dir.
+function files(dir: string): string[] {
+  return readdirSync(dir, { recursive: true, withFileTypes: true })
     .filter((entry) => entry.isFile())
     .map((entry) => relative(dir, join(entry.parentPath, entry.name)))
     .sort();
 }
 
-function install(target: string, skill: string, agent: string): string {
-  execFileSync(cliCommand, [...cliArgs, 'add', ROOT, '--skill', skill, '--agent', agent, '--yes', '--copy'], {
-    cwd: target,
-    stdio: 'inherit',
-  });
-  return join(target, AGENT_DIRS[agent]);
-}
-
-function compare(name: string, installed: string): number {
-  const source = join(ROOT, 'skills', name);
-  const sourceFiles = filesUnder(source);
-  const installedFiles = filesUnder(installed);
-  assert(JSON.stringify(sourceFiles) === JSON.stringify(installedFiles), name, sourceFiles, installedFiles);
-  for (const path of sourceFiles) {
-    assert(readFileSync(join(source, path)).equals(readFileSync(join(installed, path))), name, path, 'differs');
-  }
-  return sourceFiles.length;
-}
-
-function withTempDir(prefix: string, run: (dir: string) => void): void {
-  const dir = mkdtempSync(join(tmpdir(), prefix));
+// Install `skill` for `agent` into a fresh temp project, check which skill folders appeared
+// and that each matches skills/<name> byte for byte.
+function check(skill: string, agent: string, expected: string[]): void {
+  const project = mkdtempSync(join(tmpdir(), 'surfer-install-'));
   try {
-    run(dir);
+    execFileSync(cli, [...cliArgs, 'add', ROOT, '--skill', skill, '--agent', agent, '--yes', '--copy'], {
+      cwd: project,
+      stdio: 'inherit',
+    });
+    const installedDir = join(project, AGENT_DIRS[agent]);
+    const installed = readdirSync(installedDir).filter((name) => name.startsWith('surfer-')).sort();
+    if (installed.join() !== expected.join()) fail(agent, skill, 'installed', installed, 'expected', expected);
+    for (const name of installed) {
+      const source = join(ROOT, 'skills', name);
+      const copy = join(installedDir, name);
+      if (files(source).join() !== files(copy).join()) fail(name, files(source), files(copy));
+      for (const path of files(source)) {
+        if (!readFileSync(join(source, path)).equals(readFileSync(join(copy, path)))) fail(name, path, 'differs');
+      }
+    }
+    console.log(`Verified ${agent} install of ${skill}: ${installed.length} skill(s)`);
   } finally {
-    rmSync(dir, { recursive: true, force: true });
+    rmSync(project, { recursive: true, force: true });
   }
 }
 
-for (const name of ['surfer-create-outline', 'surfer-connect']) {
-  withTempDir('surfer-install-', (dir) => {
-    const skillsDir = install(dir, name, 'codex');
-    const packages = readdirSync(skillsDir).filter((entry) => entry.startsWith('surfer-')).sort();
-    assert(JSON.stringify(packages) === JSON.stringify([name]), packages);
-    const count = compare(name, join(skillsDir, name));
-    console.log(`Isolated install verified: ${name} (${count} files)`);
-  });
-}
-
-for (const agent of Object.keys(AGENT_DIRS)) {
-  withTempDir('surfer-install-all-', (dir) => {
-    const skillsDir = install(dir, '*', agent);
-    const installed = readdirSync(skillsDir).filter((entry) => entry.startsWith('surfer-')).sort();
-    assert(JSON.stringify(installed) === JSON.stringify(SOURCE_SKILLS), agent, installed, SOURCE_SKILLS);
-    for (const name of installed) compare(name, join(skillsDir, name));
-    console.log(`All-skills install verified for ${agent}: ${installed.length} skills`);
-  });
-}
+const allSkills = readdirSync(join(ROOT, 'skills'), { withFileTypes: true })
+  .filter((entry) => entry.isDirectory())
+  .map((entry) => entry.name)
+  .sort();
+for (const name of ['surfer-create-outline', 'surfer-connect']) check(name, 'codex', [name]);
+for (const agent of Object.keys(AGENT_DIRS)) check('*', agent, allSkills);
