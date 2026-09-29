@@ -45,12 +45,14 @@ the user wants only an outline or a brief, create a manual Content Editor and st
 1. **Reuse or create the Content Editor.** When `content_editor_id` is supplied, read it with
    `content_editor__get` in the selected workspace. Verify the keyword and any location, device, or
    setup constraints the user supplied; report a mismatch before generating. Keep its existing
-   settings unless the user requested a change. Do not create another editor for that handoff. If no
-   id was supplied, look for a matching editor the user asked to continue, then call
-   `content_editor__create` only if none applies. Include the keyword, location, device, selected
-   brand toggle, template or voice, and custom instructions. A create consumes a credit, so use one
-   `idempotency_key` for that logical create and reuse it after an ambiguous response. If no
-   template is selected, keep the one Surfer chooses during analysis.
+   settings unless the user requested a change. Reuse it for a continuation or a first draft from
+   an outline or brief. An explicit request for another, separate article takes priority: create a
+   fresh editor with the requested setup. Otherwise, if no id was supplied, look for a matching
+   editor the user asked to continue and call `content_editor__create` only if none applies.
+   Include the keyword, location, device, selected brand toggle, template or voice, and custom
+   instructions. A create consumes a credit, so use one `idempotency_key` for that logical create
+   and reuse it after an ambiguous response. If no template is selected, keep the one Surfer chooses
+   during analysis.
 
 2. **Wait for initialization.** Await the completion signal or poll `content_editor__get` until
    `state` is `completed`. Report a failure or a bounded timeout with the editor id.
@@ -68,18 +70,16 @@ the user wants only an outline or a brief, create a manual Content Editor and st
    reviewable AI outline, set `manual_outline: true` when calling `ai_article__generate`. That
    outline is separate from the SERP outline and pauses before prose is written.
 
-5. **Rejoin or generate the AI article.** Read `ai_article__list` for this editor before a generation
-   request. If an article exists, inspect it with `ai_article__get` and continue that job when it is
-   active, paused, or complete. If it failed, report the failure before deciding on a new run. Call
-   `ai_article__generate` only when no applicable article exists. After a lost response or a
-   conflict reported by the MCP tool, inspect the list again and use any article id returned by the
-   tool to identify existing work. Rejoin an identifiable article instead of generating again. If
-   bounded list/read-back checks still show no identifiable article, report generation as
-   indeterminate and stop without another generation request. On `waiting_for_user_input`, fetch
+5. **Generate or continue the requested article.** Call `ai_article__generate` for a new draft.
+   For a continuation, use `ai_article__get` with the known article id, or `ai_article__list` to find
+   it. If generation reports an existing-article conflict, use the returned article id to continue
+   that work. Surfer rejects another generation in an editor with an in-progress or completed
+   article; an explicit request for a separate article uses a fresh editor as in step 1. After a
+   lost response, use `ai_article__list` to recover the article; if the outcome remains unclear,
+   report it and stop without an automatic retry. On `waiting_for_user_input`, fetch
    `ai_article__get_outline`, present it, and submit only the user-approved version with
    `ai_article__submit_outline`. While it is `new`, `generating_outline`, or `writing`, wait. On
-   `failed`, report and stop. The SERP outline or brief from an earlier handoff remains planning
-   context; `manual_outline: true` requests a separate AI outline for review.
+   `failed`, report and stop.
 
 6. **Read the canonical draft and score snapshot.** Await the completion signal or poll
    `ai_article__get` until `completed`. Fetch `content__get`, then read `content_score__get` for the

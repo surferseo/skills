@@ -79,15 +79,12 @@ and state. Never poll indefinitely.
    count. Retain every fact's source URL and `cited_by` context.
 
 5. **Choose an optimization path**, and ask when the user has no preference.
-   - Before Auto-Optimize, inspect any known job with `auto_optimize__get`. Look up the editor's
-     latest job if the connected MCP tools support it. Rejoin an applicable active job instead of
-     starting another. `auto_optimize__run` changes the editor directly; poll `auto_optimize__get`
-     by job id. If the start response is lost, use a returned job id or the supported latest-job
-     lookup to identify the run; compare with the prior job so an older result cannot stand in for
-     this attempt. If no lookup is available or bounded reads cannot establish the outcome, report
-     it as indeterminate and stop. Do not automatically repeat the run, since each accepted start
-     can spend a credit and cancel the earlier job. Treat `optimized` and `nothing_to_optimize` as
-     completed results. Stop on a `failed` state or a quota error reported by the tool.
+   - Call `auto_optimize__run` once per requested pass; it edits the document directly. Poll
+     `auto_optimize__get` by the returned job id, or resume polling when continuing a known run.
+     Each accepted start spends a credit and can cancel an earlier run, so do not automatically
+     repeat a start whose response was lost. If no job id is available, report the outcome as unknown
+     and stop. A `completed` job has a result of `optimized` or `nothing_to_optimize`. Stop on a
+     `failed` state or a quota error.
    - A guided edit revises the draft against the selected guidelines, without keyword stuffing or
      unsupported claims, then calls `content__update`. Preserve source attribution for AI Search
      facts, and re-fetch the canonical stored body with `content__get` because Surfer sanitizes it.
