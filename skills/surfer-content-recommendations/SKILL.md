@@ -18,10 +18,8 @@ work twice.
 
 ## Prerequisites
 
-- Recommendation and brand calls require connected Surfer MCP tools. If the user requires
-  REST, report those capabilities as unavailable and stop. For MCP setup or connection failures,
-  use `surfer-connect`; ask to install it if missing. After selection, a focused workflow may
-  use REST when the user chooses it and its adapter is ready.
+- Require connected Surfer MCP tools. For setup or connection failures, use `surfer-connect`;
+  ask to install it if missing. If a required tool is unavailable, name it and stop.
 
 ## Playbook
 

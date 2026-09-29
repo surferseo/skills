@@ -1,4 +1,0 @@
-interface:
-  display_name: "Surfer REST API"
-  short_description: "Run Surfer capabilities over the REST API"
-  default_prompt: "Use $surfer-api to run a Surfer capability over the REST API."
