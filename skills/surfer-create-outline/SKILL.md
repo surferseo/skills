@@ -78,5 +78,6 @@ truth. Do not invoke `ai_article__generate` unless the user changes the request 
 ## Handoff
 
 Use `surfer-create-content-brief` when the writer also needs terms, structural targets, questions,
-and AI Search facts. Use `surfer-write-article` only after the outline has been accepted or when the
-user explicitly asks for a draft.
+and AI Search facts. Pass the `content_editor_id`, `workspace_id`, keyword, and accepted outline to
+the next skill so it reuses the analyzed editor. Use `surfer-write-article` only after the outline
+has been accepted or when the user explicitly asks for a draft.

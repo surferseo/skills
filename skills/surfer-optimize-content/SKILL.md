@@ -72,13 +72,19 @@ and state. Never poll indefinitely.
 
 4. **Read only the guidance needed.** For SEO, read `seo_guidelines__get`, one brief that carries the
    structure targets, terms, topics, questions, and competitors. For AI Search, read the facts with
-   `ai_search_guidelines__list_facts`. `ai_search_guidelines__get` returns the same facts plus the
-   score, its status, and the fact count. Retain every fact's source URL and `cited_by` context.
+   `ai_search_guidelines__list_facts`. Check the analysis readiness reported by the MCP tool: wait
+   with a bound while analysis runs, and report failure or a timeout instead of treating incomplete
+   facts as final. The separate `ai_search` score reaching `ready` does not establish facts analysis
+   completion. `ai_search_guidelines__get` returns the facts plus the score, its status, and the fact
+   count. Retain every fact's source URL and `cited_by` context.
 
 5. **Choose an optimization path**, and ask when the user has no preference.
-   - Auto-optimize runs `auto_optimize__run`, which changes the editor directly. Poll
-     `auto_optimize__get` by job id. Treat `optimized` and `nothing_to_optimize` as completed
-     results. Stop on a `failed` state. A quota problem surfaces as a 422 when starting the run.
+   - Call `auto_optimize__run` once per requested pass; it edits the document directly. Poll
+     `auto_optimize__get` by the returned job id, or resume polling when continuing a known run.
+     Each accepted start spends a credit and can cancel an earlier run, so do not automatically
+     repeat a start whose response was lost. If no job id is available, report the outcome as unknown
+     and stop. A `completed` job has a result of `optimized` or `nothing_to_optimize`. Stop on a
+     `failed` state or a quota error.
    - A guided edit revises the draft against the selected guidelines, without keyword stuffing or
      unsupported claims, then calls `content__update`. Preserve source attribution for AI Search
      facts, and re-fetch the canonical stored body with `content__get` because Surfer sanitizes it.

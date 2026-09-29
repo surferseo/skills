@@ -59,9 +59,11 @@ well.
 3. **Collect the brief inputs:**
    - `outline__get`, always returned as Markdown.
    - `seo_guidelines__get`, the SEO brief with structure targets, terms, topics, and questions.
-   - `ai_search_guidelines__list_facts` for the source-attributed facts. Also read
-     `content_score__get` to report whether the `ai_search` analysis is ready, but do not use it to
-     grade an empty draft.
+   - `ai_search_guidelines__list_facts` for the source-attributed facts. Check the analysis readiness
+     reported by the MCP tool: wait with a bound while analysis runs, use the facts once complete,
+     and report failure or a timeout without inventing facts. The separate AI Search score may be
+     read when needed, but its `ready` status does not establish facts analysis completion; do not
+     use a score to grade an empty draft.
 
    If the outline is pending, wait on `outline.status`. `outline__regenerate` rebuilds it from the
    SERP competitors with the current template, instructions, and brand knowledge. Use it after an
@@ -81,5 +83,7 @@ well.
    unavailable or incomplete AI Search analysis rather than fabricating facts.
 
 6. **Hand off deliberately.** Stop after the brief unless the user also asks for drafting. Pass the
-   accepted outline and brief to `surfer-write-article`. Do not automatically start
+   `content_editor_id`, `workspace_id`, keyword, accepted outline, and brief to
+   `surfer-write-article` so it reuses the analyzed editor. The outline is planning context; the
+   writer's optional AI outline review is a separate step. Do not automatically start
    `ai_article__generate`.
