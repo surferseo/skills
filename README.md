@@ -2,6 +2,14 @@
 
 Skills for using [Surfer](https://surferseo.com) in your AI assistant: write and optimize articles, create outlines and briefs, manage templates, and act on content recommendations. Connect through [Surfer MCP](https://devs.surferseo.com/mcp/overview).
 
+This repository is where the playbooks are maintained. The Surfer MCP server serves the same skills to every connected assistant, so a change merged here reaches the server as well. Install from here when your client does not read server-shipped skills, or when you want a pinned local copy.
+
+## Requirements
+
+- A Surfer account on a plan that includes MCP: Pro, Peace of Mind, Enterprise, or AI Search Analytics. The MCP tab in the app shows whether yours does.
+- Creating a Content Editor, opening a recommendation, generating an AI article, and running Auto-Optimize consume Surfer credits. Reading data does not. See [credits and limits](https://devs.surferseo.com/mcp/credits-and-limits).
+- For the install command below, Node.js 22.20 or newer.
+
 ## Install
 
 Use the [skills CLI](https://skills.sh) in your project:
@@ -12,13 +20,16 @@ npx skills add surferseo/skills --skill '*' -y
 
 # One workflow, when Surfer is already connected
 npx skills add surferseo/skills --skill surfer-create-outline -y
+
+# Later, pull the latest playbooks
+npx skills update
 ```
+
+Add `-a codex` or `-a claude-code` to install for one assistant only. Without the CLI, copy a `skills/<name>` folder into `.claude/skills/` for Claude Code or `.agents/skills/` for Codex.
 
 ## Connect
 
-Ask your assistant to use [`surfer-connect`](skills/surfer-connect/SKILL.md) for account setup, client-specific instructions, and connection problems. If you installed only a workflow, add `surfer-connect` when you need setup help.
-
-You need a Surfer account with MCP access. Content creation and optimization may consume Surfer credits.
+Ask your assistant to use [`surfer-connect`](skills/surfer-connect/SKILL.md) for account setup, client-specific instructions, and connection problems. If you installed only a workflow, add `surfer-connect` when you need setup help. The [Surfer MCP security page](https://devs.surferseo.com/mcp/security) explains what a connected assistant can read, change, and delete.
 
 ## Skills
 
@@ -33,5 +44,18 @@ You need a Surfer account with MCP access. Content creation and optimization may
 | `surfer-connect` | Set up and verify your connection |
 
 Try: “Create a Surfer outline for best trail running shoes. Stop after the outline.”
+
+## Contributing
+
+Every pull request validates each skill against the Agent Skills spec and checks its `agents/openai.yaml` metadata and bundled license. To run the same checks locally with Python 3.12:
+
+```bash
+python -m pip install 'PyYAML==6.0.2'
+python -m pip install 'git+https://github.com/agentskills/agentskills.git@69ef37e9424c0a7ea9dd2293b559e43ec8176379#subdirectory=skills-ref'
+for skill in skills/*/; do
+  skills-ref validate "$skill"
+done
+python scripts/check_packaging.py
+```
 
 For account help, visit the [Surfer help center](https://docs.surferseo.com/). MIT licensed; see [LICENSE](LICENSE).
