@@ -45,17 +45,4 @@ Ask your assistant to use [`surfer-connect`](skills/surfer-connect/SKILL.md) for
 
 Try: “Create a Surfer outline for best trail running shoes. Stop after the outline.”
 
-## Contributing
-
-Every pull request validates each skill against the Agent Skills spec and checks its `agents/openai.yaml` metadata and bundled license. To run the same checks locally with Python 3.12:
-
-```bash
-python -m pip install 'PyYAML==6.0.2'
-python -m pip install 'git+https://github.com/agentskills/agentskills.git@69ef37e9424c0a7ea9dd2293b559e43ec8176379#subdirectory=skills-ref'
-for skill in skills/*/; do
-  skills-ref validate "$skill"
-done
-python scripts/check_packaging.py
-```
-
 For account help, visit the [Surfer help center](https://docs.surferseo.com/). MIT licensed; see [LICENSE](LICENSE).
