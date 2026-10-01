@@ -52,7 +52,9 @@ Try: “Create a Surfer outline for best trail running shoes. Stop after the out
 
 ## Releasing the plugin
 
-For local development, use Node.js 24.12 or newer and run `npm ci`.
+For local development, use Node.js 24.12 or newer, Git, and `tar`, then run `npm ci`.
+The packaging checker uses `yaml` as its only runtime npm dependency; TypeScript,
+Node types, and Prettier are development tools.
 The scripts read committed `HEAD`: commit package changes before running
 `npm run check:packaging` or `npm run build:plugin`. Run `npm run check` for
 TypeScript and formatting checks.

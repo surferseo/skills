@@ -1,9 +1,10 @@
 /** Check the committed plugin package beyond the Agent Skills validator. */
 
-import { posix } from "node:path";
-import { buffer } from "node:stream/consumers";
+import { execFileSync } from "node:child_process";
+import { mkdtempSync, readFileSync, readdirSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join, posix, relative, sep } from "node:path";
 
-import { extract } from "tar-stream";
 import { parseDocument } from "yaml";
 
 import { git, PACKAGE_PATHS } from "./build-plugin.ts";
@@ -32,29 +33,38 @@ function readText(files: PackageFiles, path: string): string {
   return decoder.decode(data);
 }
 
-async function loadPackage(): Promise<PackageFiles> {
-  const archive = extract();
-  const files = new Map<string, Buffer>();
+function loadPackage(): PackageFiles {
+  const directory = mkdtempSync(join(tmpdir(), "surfer-package-"));
 
-  archive.end(git("archive", "--format=tar", "HEAD", ...PACKAGE_PATHS));
+  try {
+    execFileSync("tar", ["-xf", "-", "-C", directory], {
+      input: git("archive", "--format=tar", "HEAD", ...PACKAGE_PATHS),
+    });
 
-  for await (const entry of archive) {
-    const { name, type } = entry.header;
+    const files = new Map<string, Buffer>();
 
-    if (type === "directory") {
-      entry.resume();
+    for (const entry of readdirSync(directory, {
+      recursive: true,
+      withFileTypes: true,
+    })) {
+      if (entry.isDirectory()) {
+        continue;
+      }
 
-      continue;
+      const file = join(entry.parentPath, entry.name);
+      const path = relative(directory, file).split(sep).join("/");
+
+      if (!entry.isFile()) {
+        throw new Error(`Package resource must be a regular file: ${path}`);
+      }
+
+      files.set(path, readFileSync(file));
     }
 
-    if (type !== "file") {
-      throw new Error(`Package resource must be a regular file: ${name}`);
-    }
-
-    files.set(name, await buffer(entry));
+    return files;
+  } finally {
+    rmSync(directory, { recursive: true, force: true });
   }
-
-  return files;
 }
 
 function checkPlugin(files: PackageFiles, skills: string[]): string[] {
@@ -197,9 +207,9 @@ function checkLicense(
   return [];
 }
 
-async function main(): Promise<number> {
+function main(): number {
   try {
-    const files = await loadPackage();
+    const files = loadPackage();
     const rootLicense = files.get("LICENSE");
 
     if (rootLicense === undefined) {
@@ -240,5 +250,5 @@ async function main(): Promise<number> {
 }
 
 if (import.meta.main) {
-  process.exitCode = await main();
+  process.exitCode = main();
 }
