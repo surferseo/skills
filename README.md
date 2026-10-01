@@ -12,10 +12,10 @@ This repository is where the playbooks are maintained. The Surfer MCP server ser
 
 ## Install
 
-For ChatGPT and Codex plugins, download the versioned ZIP from the artifacts of a
-successful [`main` workflow run](https://github.com/surferseo/skills/actions/workflows/validate-skills.yml?query=branch%3Amain).
-Every push to `main` builds the plugin after validation. It bundles the same
-`skills/` directory and the Surfer MCP connection in `mcp.json`.
+For ChatGPT and Codex plugins, download the versioned ZIP from the
+[latest release](https://github.com/surferseo/skills/releases/latest).
+It bundles the same `skills/` directory and the Surfer MCP connection in
+`mcp.json`.
 
 Use the [skills CLI](https://skills.sh) in your project:
 
@@ -49,5 +49,17 @@ Ask your assistant to use [`surfer-connect`](skills/surfer-connect/SKILL.md) for
 | `surfer-connect` | Set up and verify your connection |
 
 Try: “Create a Surfer outline for best trail running shoes. Stop after the outline.”
+
+## Releasing the plugin
+
+Update `version` in `plugin.json` and merge the changes to `main`. From the updated
+`main`, push a matching version tag, such as `v0.1.0` for version `0.1.0`.
+GitHub Actions validates the skills and package, builds the ZIP, and publishes it
+as a GitHub Release asset with generated release notes. A mismatched tag fails
+the build. Tags with a prerelease suffix, such as `v0.2.0-beta.1`, publish a
+prerelease and do not replace the latest stable release.
+
+Pull requests and pushes to `main` also validate and build the plugin. Pushes to
+`main` keep a workflow artifact for verification.
 
 For account help, visit the [Surfer help center](https://docs.surferseo.com/). MIT licensed; see [LICENSE](LICENSE).

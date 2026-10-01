@@ -3,6 +3,7 @@ name: Validate and package skills
 on:
   push:
     branches: [main]
+    tags: ['v*']
   pull_request:
 
 env:
@@ -37,17 +38,53 @@ jobs:
     name: Plugin ZIP
     needs: validate
     runs-on: ubuntu-latest
+    outputs:
+      artifact-id: ${{ steps.upload.outputs.artifact-id }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - name: Check release tag matches plugin version
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          version="$(python -c 'import json; print(json.load(open("plugin.json"))["version"])')"
+          if [[ "$GITHUB_REF_NAME" != "v$version" ]]; then
+            echo "::error::Tag $GITHUB_REF_NAME must match plugin.json version v$version"
+            exit 1
+          fi
       - name: Build plugin ZIP
         run: python scripts/build_plugin.py
       - name: Upload plugin ZIP
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        id: upload
+        if: github.event_name == 'push'
         uses: actions/upload-artifact@v7
         with:
           path: dist/*.zip
           archive: false
           if-no-files-found: error
+
+  release:
+    name: Publish plugin release
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    needs: build-plugin
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download validated plugin ZIP
+        uses: actions/download-artifact@v8
+        with:
+          artifact-ids: ${{ needs.build-plugin.outputs.artifact-id }}
+          path: dist
+          skip-decompress: true
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          flags=(--verify-tag --generate-notes)
+          if [[ "${GITHUB_REF_NAME%%+*}" == *-* ]]; then
+            flags+=(--prerelease --latest=false)
+          fi
+          gh release create "$GITHUB_REF_NAME" dist/*.zip "${flags[@]}"
