@@ -19,15 +19,15 @@ the user wants only an outline or a brief, create a manual Content Editor and st
 
 ## Prerequisites
 
-- Resolve the transport: with the Surfer MCP server connected, call its tools directly; otherwise
-  run over REST with `surfer-api`; with neither, connect one via `surfer-connect`. REST is usable
-  when an API key is set in the `SURFER_API_KEY` environment variable or the client's secret
-  storage. Check for that key before concluding that no transport exists. If no transport can run a
-  required capability, name it and stop. Do not improvise raw HTTP or assume an endpoint.
-- Resolve one active `workspace_id` with `workspace__list`. If several workspaces are active, ask
-  the caller which `workspace_id` to use rather than guessing.
-- Require `main_keyword` and accept up to 19 secondary keywords. Default the location to United
-  States and the device to mobile. Location and device are inputs to `content_editor__create`.
+- Require connected Surfer MCP tools. For setup or connection failures, use `surfer-connect`;
+  ask to install it if missing. If a required tool is unavailable, name it and stop.
+- Use the `workspace_id` supplied by the user or the handoff, and verify it is active with
+  `workspace__list`. If none was supplied, use the sole active workspace or ask the caller to
+  choose when several are active.
+- Accept an existing `content_editor_id` as a first-class input, especially from a recommendation,
+  outline, or brief handoff. Require `main_keyword` for a new editor; for an existing editor, read
+  its keyword and accept up to 19 secondary keywords. Default the location to United States and the
+  device to mobile only when creating. Location and device are inputs to `content_editor__create`.
 - Before creation, collect the optional `target_word_count`, any SEO or AI Search score targets,
   and `manual_outline`, which is an `ai_article__generate` input. Collect the full editor setup as
   well: the `use_brand_knowledge` toggle (it applies the workspace's brand profile, which cannot be
@@ -42,12 +42,17 @@ the user wants only an outline or a brief, create a manual Content Editor and st
 
 ## Playbook
 
-1. **Create the fully configured Content Editor.** Call `content_editor__create` once with the
-   keyword, location, device, the selected brand toggle, a template or voice, and custom instructions.
-   A create consumes a credit, so pass an `idempotency_key`. Retry a timeout or an ambiguous
-   failure with the same key. Surfer then returns the original editor instead of creating a
-   duplicate. If no template is selected, keep the template Surfer chooses during analysis rather
-   than inventing a content type.
+1. **Reuse or create the Content Editor.** When `content_editor_id` is supplied, read it with
+   `content_editor__get` in the selected workspace. Verify the keyword and any location, device, or
+   setup constraints the user supplied; report a mismatch before generating. Keep its existing
+   settings unless the user requested a change. Reuse it for a continuation or a first draft from
+   an outline or brief. An explicit request for another, separate article takes priority: create a
+   fresh editor with the requested setup. Otherwise, if no id was supplied, look for a matching
+   editor the user asked to continue and call `content_editor__create` only if none applies.
+   Include the keyword, location, device, selected brand toggle, template or voice, and custom
+   instructions. A create consumes a credit, so use one `idempotency_key` for that logical create
+   and reuse it after an ambiguous response. If no template is selected, keep the one Surfer chooses
+   during analysis.
 
 2. **Wait for initialization.** Await the completion signal or poll `content_editor__get` until
    `state` is `completed`. Report a failure or a bounded timeout with the editor id.
@@ -65,11 +70,16 @@ the user wants only an outline or a brief, create a manual Content Editor and st
    reviewable AI outline, set `manual_outline: true` when calling `ai_article__generate`. That
    outline is separate from the SERP outline and pauses before prose is written.
 
-5. **Generate the AI article.** Call `ai_article__generate`. If an article already exists, rejoin it
-   with `ai_article__list` and `ai_article__get` rather than creating another. Handle the states as
-   follows. On `waiting_for_user_input`, fetch `ai_article__get_outline`, present it, and submit only
-   the user-approved version with `ai_article__submit_outline`. While it is `new`,
-   `generating_outline`, or `writing`, wait. On `failed`, report and stop.
+5. **Generate or continue the requested article.** Call `ai_article__generate` for a new draft.
+   For a continuation, use `ai_article__get` with the known article id, or `ai_article__list` to find
+   it. If generation reports an existing-article conflict, use the returned article id to continue
+   that work. Surfer rejects another generation in an editor with an in-progress or completed
+   article; an explicit request for a separate article uses a fresh editor as in step 1. After a
+   lost response, use `ai_article__list` to recover the article; if the outcome remains unclear,
+   report it and stop without an automatic retry. On `waiting_for_user_input`, fetch
+   `ai_article__get_outline`, present it, and submit only the user-approved version with
+   `ai_article__submit_outline`. While it is `new`, `generating_outline`, or `writing`, wait. On
+   `failed`, report and stop.
 
 6. **Read the canonical draft and score snapshot.** Await the completion signal or poll
    `ai_article__get` until `completed`. Fetch `content__get`, then read `content_score__get` for the

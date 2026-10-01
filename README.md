@@ -1,72 +1,48 @@
 # Surfer Skills
 
-[Agent Skills](https://agentskills.io) for working with [Surfer](https://surferseo.com). These are transport-agnostic content workflows whose capability IDs are the **Surfer MCP server's tool names**. Run them over the MCP server, which is primary, or over the REST API through the `surfer-api` adapter, which is secondary.
+Skills for using [Surfer](https://surferseo.com) in your AI assistant: write and optimize articles, create outlines and briefs, manage templates, and act on content recommendations. Connect through [Surfer MCP](https://devs.surferseo.com/mcp/overview).
 
-Install with the [`skills`](https://skills.sh) CLI:
+This repository is where the playbooks are maintained. The Surfer MCP server serves the same skills to every connected assistant, so a change merged here reaches the server as well. Install from here when your client does not read server-shipped skills, or when you want a pinned local copy.
+
+## Requirements
+
+- A Surfer account on a plan that includes MCP: Pro, Peace of Mind, Enterprise, or AI Search Analytics. The MCP tab in the app shows whether yours does.
+- Creating a Content Editor, opening a recommendation, generating an AI article, and running Auto-Optimize consume Surfer credits. Reading data does not. See [credits and limits](https://devs.surferseo.com/mcp/credits-and-limits).
+- For the install command below, Node.js 22.20 or newer.
+
+## Install
+
+Use the [skills CLI](https://skills.sh) in your project:
 
 ```bash
-# everything
-npx skills add surferseo/skills
+# All skills, including connection setup
+npx skills add surferseo/skills --skill '*' -y
 
-# or a workflow plus the REST adapter
-npx skills add surferseo/skills --skill surfer-write-article --skill surfer-api
+# One workflow, when Surfer is already connected
+npx skills add surferseo/skills --skill surfer-create-outline -y
+
+# Later, pull the latest playbooks
+npx skills update
 ```
 
-A workflow on its own can't do anything. It needs a **transport** to run against. The primary transport is the connected **Surfer MCP server**, whose tools are the capability IDs, so no extra skill is required. The secondary transport is the **`surfer-api`** adapter over REST. The skills spec has no hard dependency mechanism, so co-installing `surfer-api` with a workflow is a convention rather than an enforced rule. Running `npx skills add surferseo/skills` with no `--skill` installs everything.
+Add `-a codex` or `-a claude-code` to install for one assistant only. Without the CLI, copy a `skills/<name>` folder into `.claude/skills/` for Claude Code or `.agents/skills/` for Codex.
 
-## How it's organized
+## Connect
 
-Two layers:
+Ask your assistant to use [`surfer-connect`](skills/surfer-connect/SKILL.md) for account setup, client-specific instructions, and connection problems. If you installed only a workflow, add `surfer-connect` when you need setup help. The [Surfer MCP security page](https://devs.surferseo.com/mcp/security) explains what a connected assistant can read, change, and delete.
 
-1. **Workflow skills** are the entrypoints. Each is a transport-agnostic playbook for a real Surfer job. Start here.
-2. **Transports** are where a capability ID becomes a real call. The **Surfer MCP server** is primary. Its tools are the IDs and carry their own descriptions. **`surfer-api`** is secondary. It maps each ID to a REST method and path and owns the REST async and poll mechanics.
+## Skills
 
-Workflows reference **capability IDs only** — the MCP server's tool names — never a transport, endpoint, or URL. Whichever transport is connected executes those IDs, and the workflows run unchanged over either.
-
-### Workflow skills — *what you want to do*
-
-| Skill | Use it to… |
+| Skill | Use it to |
 |---|---|
-| `surfer-write-article` | Turn a keyword or topic into a Surfer AI draft with SEO and AI Search analysis |
+| `surfer-write-article` | Generate an article from a keyword or topic |
 | `surfer-optimize-content` | Improve existing content for SEO, AI Search, or both |
-| `surfer-create-outline` | Build a Surfer-derived, SERP-informed article outline |
-| `surfer-create-content-brief` | Build a writer-ready SEO and AI Search content brief |
-| `surfer-manage-content-templates` | Create and manage reusable content templates |
-| `surfer-content-recommendations` | Turn site recommendations into write or optimize work |
+| `surfer-create-outline` | Create a SERP-informed outline |
+| `surfer-create-content-brief` | Prepare a writer-ready content brief |
+| `surfer-manage-content-templates` | Manage reusable content templates |
+| `surfer-content-recommendations` | Act on site recommendations |
+| `surfer-connect` | Set up and verify your connection |
 
-### Transports — *how the calls are made*
+Try: “Create a Surfer outline for best trail running shoes. Stop after the outline.”
 
-The **primary** transport is the **Surfer MCP server**. Connect it, and its tools are the capability
-IDs. Each tool carries its own description of inputs, async behavior, and poll target, so no adapter
-skill is needed. The **secondary** transport is the REST API, reached through one adapter skill:
-
-| Skill | What it is |
-|---|---|
-| `surfer-api` | REST adapter. Maps each capability ID to a Surfer REST method and path and owns the REST async and poll mechanics: auth, conventions, endpoints, and polling. Fetches live docs for the exact request and response shapes. |
-
-The capabilities behind the recommendation workflow — brand knowledge and site recommendations —
-are MCP-only by design: the REST API does not expose them, so no capability-map row ever binds
-them. `surfer-content-recommendations` runs those stages only over the MCP server and reports them
-as unavailable without it.
-
-The `surfer-connect` skill sets up a transport for the session. It registers the Surfer MCP server
-in your client, or configures an API key for `surfer-api`. The workflows hand off to it when no
-transport is usable.
-
-## Always up to date
-
-`surfer-api` does **not** hard-code endpoint details. Surfer's docs are generated from its OpenAPI spec and published at these URLs:
-
-- the index: `https://app.surferseo.com/llms.txt`
-- a per-resource doc: `https://app.surferseo.com/llms/<resource>.txt`
-- the full reference: `https://app.surferseo.com/llms-full.txt`
-
-The skill fetches these at runtime, so it tracks the live API with no vendoring or sync step.
-
-## Authentication
-
-Surfer API requests use an `API-KEY` header. v2 resources are scoped to a workspace under `/api/v2/workspaces/{workspace_id}/...`. See `surfer-api` for details, and use `GET /api/v2/workspaces` to find your workspace id.
-
-## License
-
-MIT. See [LICENSE](./LICENSE).
+For account help, visit the [Surfer help center](https://docs.surferseo.com/). MIT licensed; see [LICENSE](LICENSE).
