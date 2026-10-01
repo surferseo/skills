@@ -18,18 +18,6 @@ const INTERFACE_FIELDS = [
 ];
 const decoder = new TextDecoder("utf8", { fatal: true, ignoreBOM: true });
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-
-function record(value: unknown): Record<string, unknown> {
-  if (!isRecord(value)) {
-    throw new Error("Expected a mapping");
-  }
-
-  return value;
-}
-
 function matches(value: unknown, pattern: RegExp): value is string {
   return typeof value === "string" && pattern.exec(value)?.[0] === value;
 }
@@ -70,73 +58,70 @@ async function loadPackage(): Promise<PackageFiles> {
 }
 
 function checkPlugin(files: PackageFiles, skills: string[]): string[] {
-  let manifest: Record<string, unknown>;
-  let listing: Record<string, unknown>;
-
   try {
-    manifest = record(JSON.parse(readText(files, "plugin.json")));
+    const manifest = JSON.parse(readText(files, "plugin.json"));
+    const listing = manifest.extensions["com.openai"].interface;
+
     JSON.parse(readText(files, "mcp.json"));
 
-    const extensions = record(manifest.extensions);
-    const openai = record(extensions["com.openai"]);
-    listing = record(openai.interface);
+    const failures: string[] = [];
+    const { name, version } = manifest;
+    const subtitle = listing.shortDescription;
+
+    if (!matches(name, /^[a-z0-9]+(?:-[a-z0-9]+)*$/) || name.length > 64) {
+      failures.push(
+        "Plugin name must be lowercase kebab-case, at most 64 characters",
+      );
+    }
+
+    if (!matches(version, /^\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.+-]+)?$/)) {
+      failures.push("Plugin version must be safe for a versioned ZIP filename");
+    }
+
+    if (typeof subtitle !== "string" || [...subtitle].length > 30) {
+      failures.push(
+        "Plugin subtitle must be a string of at most 30 characters",
+      );
+    }
+
+    for (const field of [
+      "logo",
+      "composerIcon",
+      "logoDark",
+      "composerIconDark",
+    ]) {
+      if (!(field in listing)) {
+        continue;
+      }
+
+      const asset = listing[field];
+
+      if (
+        typeof asset !== "string" ||
+        posix.isAbsolute(asset) ||
+        asset.split("/").includes("..") ||
+        !files.has(posix.normalize(asset))
+      ) {
+        failures.push(
+          `${field} must refer to a packaged asset: ${JSON.stringify(asset)}`,
+        );
+      }
+    }
+
+    if (skills.length === 0) {
+      failures.push("No committed skills found");
+    }
+
+    for (const skill of skills) {
+      if (!files.has(`skills/${skill}/SKILL.md`)) {
+        failures.push(`Missing SKILL.md for ${skill}`);
+      }
+    }
+
+    return failures;
   } catch (error) {
     return [`Cannot read plugin metadata: ${error}`];
   }
-
-  const failures: string[] = [];
-  const { name, version } = manifest;
-  const subtitle = listing.shortDescription;
-
-  if (!matches(name, /^[a-z0-9]+(?:-[a-z0-9]+)*$/) || name.length > 64) {
-    failures.push(
-      "Plugin name must be lowercase kebab-case, at most 64 characters",
-    );
-  }
-
-  if (!matches(version, /^\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.+-]+)?$/)) {
-    failures.push("Plugin version must be safe for a versioned ZIP filename");
-  }
-
-  if (typeof subtitle !== "string" || [...subtitle].length > 30) {
-    failures.push("Plugin subtitle must be a string of at most 30 characters");
-  }
-
-  for (const field of [
-    "logo",
-    "composerIcon",
-    "logoDark",
-    "composerIconDark",
-  ]) {
-    if (!(field in listing)) {
-      continue;
-    }
-
-    const asset = listing[field];
-
-    if (
-      typeof asset !== "string" ||
-      posix.isAbsolute(asset) ||
-      asset.split("/").includes("..") ||
-      !files.has(posix.normalize(asset))
-    ) {
-      failures.push(
-        `${field} must refer to a packaged asset: ${JSON.stringify(asset)}`,
-      );
-    }
-  }
-
-  if (skills.length === 0) {
-    failures.push("No committed skills found");
-  }
-
-  for (const skill of skills) {
-    if (!files.has(`skills/${skill}/SKILL.md`)) {
-      failures.push(`Missing SKILL.md for ${skill}`);
-    }
-  }
-
-  return failures;
 }
 
 function checkMetadata(files: PackageFiles, path: string): string[] {
@@ -153,23 +138,23 @@ function checkMetadata(files: PackageFiles, path: string): string[] {
       throw error;
     }
 
-    metadata = document.toJS();
+    metadata = document.toJS({ mapAsMap: true });
   } catch (error) {
     return [`${path}: cannot read YAML: ${error}`];
   }
 
-  if (!isRecord(metadata)) {
+  if (!(metadata instanceof Map)) {
     return [`${path}: expected a YAML mapping`];
   }
 
   const failures: string[] = [];
-  const ui = metadata.interface;
+  const ui: unknown = metadata.get("interface");
 
-  if (!isRecord(ui)) {
+  if (!(ui instanceof Map)) {
     failures.push(`${path}: interface must be a mapping`);
   } else {
     for (const field of INTERFACE_FIELDS) {
-      const value = ui[field];
+      const value: unknown = ui.get(field);
 
       if (typeof value !== "string" || !value.trim()) {
         failures.push(`${path}: interface.${field} must be a non-empty string`);
@@ -177,18 +162,19 @@ function checkMetadata(files: PackageFiles, path: string): string[] {
     }
   }
 
-  const dependencies = metadata.dependencies;
-  const tools = isRecord(dependencies) ? dependencies.tools : undefined;
+  const dependencies: unknown = metadata.get("dependencies");
+  const tools: unknown =
+    dependencies instanceof Map ? dependencies.get("tools") : undefined;
 
   if (!Array.isArray(tools)) {
     failures.push(`${path}: dependencies.tools must be a list`);
   } else if (
     !tools.some(
       (tool: unknown) =>
-        isRecord(tool) &&
-        tool.type === "mcp" &&
-        tool.transport === "streamable_http" &&
-        tool.url === MCP_URL,
+        tool instanceof Map &&
+        tool.get("type") === "mcp" &&
+        tool.get("transport") === "streamable_http" &&
+        tool.get("url") === MCP_URL,
     )
   ) {
     failures.push(
