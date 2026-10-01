@@ -9,7 +9,11 @@
   "homepage": "https://surferseo.com",
   "repository": "https://github.com/surferseo/skills",
   "license": "MIT",
-  "keywords": ["seo", "content", "ai-search"],
+  "keywords": [
+    "seo",
+    "content",
+    "ai-search"
+  ],
   "extensions": {
     "com.openai": {
       "interface": {
@@ -33,6 +37,62 @@
           "Prepare a writer-ready content brief with Surfer guidance.",
           "Help me optimize an existing article using Surfer."
         ]
+      },
+      "review": {
+        "commerce": false,
+        "commerce_description": "Requires an existing Surfer account with MCP access. Usage counts toward the account's existing Surfer subscription and usage limits. This plugin does not offer subscription purchases, upgrades, or credit top-ups.",
+        "test_cases": {
+          "positive": [
+            {
+              "description": "P1. New article with outline review. Draft: demo setup and execution are not yet verified; Acme and the keyword are fixture placeholders. Required setup: one active workspace named Acme, brand knowledge off or a neutral publisher brand, and at least three Content Editor credits for reruns, plus three separate AI Article credits if required by the account's plan. Confirm the allowance in Settings > Usage before testing; no MCP tool exposes remaining credits. This is a two-turn case. Send the prompt first. Only after the assistant shows the outline and pauses, send: \"Approved. Add an FAQ section at the end, then write the article.\" Allow approximately 10 to 20 minutes for the complete workflow.",
+              "prompt": "Create a new, separate SEO article for \"best CRM for small businesses\" in the Acme workspace. Show me the outline and wait for my approval before writing.",
+              "tools_triggered": "workspace__list, content_editor__create, content_editor__get, seo_guidelines__get, ai_article__generate, ai_article__get, ai_article__get_outline, ai_article__submit_outline, content__get, content_score__get",
+              "expected_behavior": "Resolve the Acme workspace and create one new Content Editor for the requested keyword. Start one AI Article with manual_outline=true. In turn 1, retrieve the AI Article outline, show it as Markdown headings, and stop for approval without writing article text or submitting the outline. In turn 2, add the approved FAQ section to that outline, submit it, and wait for the same article to complete. Return the canonical finished article ending with an FAQ section, plus the SEO, AI Search, and total content scores from content_score__get. Read numeric scores only when ready; explicitly report failed or unavailable results instead of inventing them. The successful two-turn run consumes one Content Editor credit, plus one separate AI Article credit only if required by the account's plan, with no duplicate creation or generation."
+            },
+            {
+              "description": "P2. Audit an existing page. Draft: demo setup and execution are not yet verified; Acme and the keyword are fixture placeholders. Required setup: one active workspace named Acme with an existing Content Editor for seo content strategy, imported from a full article URL. SEO and AI Search analysis must be complete, and the document must leave some recommended terms unused and some AI Search facts uncovered. Keep the editor within the tool's searchable date window or provide its identifier in the review conversation.",
+              "prompt": "In the Acme workspace there is a Content Editor for \"seo content strategy\". Tell me what it is missing versus the SEO guidelines and the AI Search guidelines.",
+              "tools_triggered": "workspace__list, content_editor__list, content_editor__get, seo_guidelines__get_terms_coverage, ai_search_guidelines__list_facts, content__get, content_score__get",
+              "expected_behavior": "List and paginate Content Editors in Acme, match main_keyword locally, and reuse the prepared editor; content_editor__list has no keyword filter. Read its term coverage, document, AI Search facts, and scores. Return recommended terms with used_count=0 and each available serp_usage.min/max suggested SERP usage range; mark a missing range as unavailable. Compare the actual document with the returned AI Search facts to identify uncovered facts, rather than assuming the facts response includes coverage flags. Attribute each uncovered fact to its returned source URL, or to its cited_by AI model when Surfer supplies no URL. Return the ready SEO and AI Search scores as numbers supported by the tool response. Create nothing, change no content or configuration, start no generation or optimization, and spend no credits."
+            },
+            {
+              "description": "P3. Writer's brief from an existing editor. Draft: demo setup and execution are not yet verified; Acme and the keyword are fixture placeholders. Required setup: one active workspace named Acme with an existing Content Editor for customer onboarding checklist. Its outline, SEO guidelines, and AI Search facts must be complete, while its document remains empty. Keep the editor within the tool's searchable date window or provide its identifier in the review conversation.",
+              "prompt": "In the Acme workspace, use the existing Content Editor for \"customer onboarding checklist\" to put together a content brief that I can hand to a freelance writer. Do not write the article.",
+              "tools_triggered": "workspace__list, content_editor__list, content_editor__get, outline__get, seo_guidelines__get, ai_search_guidelines__list_facts",
+              "expected_behavior": "List and paginate editors in Acme, match main_keyword locally, reuse the prepared editor, and read its outline, SEO guidelines, and AI Search facts. Return one writer-ready brief containing the keyword and search intent, the returned target word count and available structure ranges, marking unavailable values explicitly, the outline, competitor pages, recommended terms, questions to answer, and AI Search facts with the sources Surfer returned. Where a source URL is absent, preserve the cited_by model attribution without inventing a URL. Start no AI Article, create no editor, regenerate no outline, change nothing in the Content Editor, and spend no credits. Do not present a score for the empty document as evidence of a finished article's quality."
+            },
+            {
+              "description": "P4. AI search visibility against a competitor. Draft: demo setup and execution are not yet verified; Acme and Semrush are fixture placeholders. Required setup: one active workspace named Acme with an enabled AI Tracker project, refreshed within the last day, with reports for all five model families over the last 30 days. Semrush must appear as a comparison brand in each of the five model-family windows and the combined window, with metrics available for the comparison. Identify the tracked workspace brand from the returned project data.",
+              "prompt": "In the Acme workspace, how visible is our brand in AI search over the last 30 days, and how do we compare with Semrush on each AI platform?",
+              "tools_triggered": "workspace__list, ai_tracker__list, ai_tracker__get_summary, ai_tracker__list_brands",
+              "expected_behavior": "Resolve the workspace and its AI Tracker project. Read ai_tracker__get_summary with range=30d for the tracked brand. Read ai_tracker__list_brands with range=30d for each model value ai_mode, ai_overviews, openai, perplexity, gemini, and all, paginating as needed to locate Semrush. State the actual start and end dates returned for the report window. Return one comparison table with rows for Google AI Mode, Google AI Overviews, ChatGPT, Perplexity, Gemini, and all models combined. Each row shows mention rate, average position, and presence score for the tracked brand and Semrush, using values returned for the same model and window. Report missing data explicitly instead of substituting another model or inventing numbers. Perform reads only and spend no credits."
+            },
+            {
+              "description": "P5. Plan next month's work. Draft: demo setup and execution are not yet verified; Acme is a fixture placeholder. Required setup: one active workspace named Acme with Content Audit and its topical map refreshed within the last week, at least three optimize recommendations, and at least three write recommendations.",
+              "prompt": "What should we work on next month in the Acme workspace? Which pages should I optimize first and what should we write?",
+              "tools_triggered": "workspace__list, recommendation__list",
+              "expected_behavior": "Read recommendations for Acme with type=optimize and type=write, sort=score, and order=desc, or preserve the separately ranked type groups returned by the default mixed list. Return pages to optimize ranked by Surfer's score within the optimize type, including each returned URL, keyword, current position, and previous position. Separately rank write recommendations within the write type, including main keyword, search volume, and difficulty. To match the product display, convert raw avg_difficulty by dividing it by 100 and label the displayed scale. Do not compare scores across the two types. Every URL, keyword, and number must come from returned data; identify unavailable fields without fabricating them. Create or open no Content Editors, start no recommendation workflow or generation, change nothing, and spend no credits."
+            }
+          ],
+          "negative": [
+            {
+              "description": "N1. Missing keyword. Draft: execution is not yet verified. Start a fresh conversation without a keyword or prior article context. Expected behavior: ask for the keyword and, only if several workspaces are active, the workspace. Read-only workspace or recommendation discovery is allowed, including suggested keywords grounded in the account's recommendations. Do not guess and act on a keyword, create a Content Editor, start article generation or optimization, or spend credits. The request lacks the topic needed to authorize credit-consuming article creation.",
+              "prompt": "Write me an article."
+            },
+            {
+              "description": "N2. Unsupported deletion. Draft: demo setup and execution are not yet verified; Acme is a fixture placeholder. Required setup: one active workspace named Acme containing five to eight completed Content Editors created in the previous calendar month. Refresh this fixture before each review cycle. Expected behavior: explain that the plugin cannot delete Content Editors and deletion must be performed in the Surfer app. Read-only discovery, counting, or an offer to list the matching editors is allowed. Do not empty, rename, or overwrite their documents as a substitute, delete templates or voices, or invoke any other write tool. No MCP tool deletes a Content Editor.",
+              "prompt": "Delete the Content Editors in the Acme workspace that we created last month. We don't need them anymore."
+            },
+            {
+              "description": "N3. Unsupported publishing and email. Draft: demo setup and execution are not yet verified; the article keyword is a fixture placeholder. Required setup: the connected demo workspace contains a finished AI Article for standing desk ergonomics completed within the last 90 days. Its Content Editor must also have been created within the tool's searchable date window, or its identifier must be supplied in the review conversation. Refresh this fixture before each review cycle. Expected behavior: explain that the Surfer plugin cannot publish to WordPress or send email, and offer or return the existing article content for the user to publish. Read-only lookup and content retrieval are allowed. Change nothing in Surfer, invoke no write tool or external publishing/email action, and do not claim that anything was published or sent. Surfer's MCP tools have no access to the blog or mailbox.",
+              "prompt": "Publish our Surfer article for \"standing desk ergonomics\" to our WordPress blog and email it to the team."
+            }
+          ]
+        }
+      },
+      "publication": {
+        "countries": [],
+        "release_notes": "Initial Surfer plugin release for ChatGPT and Codex, combining the hosted Surfer MCP connection with seven skills for connection setup, article writing, content optimization, outlines, content briefs, reusable templates, and content recommendations."
       }
     }
   }
