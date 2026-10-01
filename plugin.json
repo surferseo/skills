@@ -15,14 +15,15 @@
       "interface": {
         "displayName": "Surfer",
         "shortDescription": "Create and optimize content",
-        "longDescription": "Use Surfer workflows and your connected workspace to plan articles, create briefs and drafts, and improve existing content using SEO and AI Search guidance.",
+        "longDescription": "Connect your Surfer workspace to plan articles, create outlines and writer-ready briefs, generate drafts, optimize existing content for SEO and AI Search, manage templates, and act on content recommendations.",
         "developerName": "Surfer",
         "category": "Productivity",
         "capabilities": [
-          "Plan and draft content",
-          "Review SEO and AI Search guidance",
-          "Optimize existing content"
+          "Read",
+          "Write"
         ],
+        "logo": "./assets/surfer-icon.png",
+        "composerIcon": "./assets/surfer-icon.png",
         "websiteURL": "https://surferseo.com",
         "supportURL": "https://docs.surferseo.com/",
         "privacyPolicyURL": "https://surferseo.com/privacy-policy/",
