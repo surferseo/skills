@@ -30,7 +30,7 @@ jobs:
           for skill in skills/*/; do
             skills-ref validate "$skill"
           done
-      - name: Check metadata and licenses
+      - name: Check plugin and skill packaging
         run: python scripts/check_packaging.py
 
   build-plugin:
