@@ -2,7 +2,7 @@
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "surfer",
   "version": "0.1.0",
-  "description": "Surfer content workflows with a connected Surfer MCP server.",
+  "description": "Track AI search visibility, write end-to-end articles, optimize existing content, and act on data-backed recommendations with one command.",
   "author": {
     "name": "Surfer"
   },
@@ -14,8 +14,8 @@
     "com.openai": {
       "interface": {
         "displayName": "Surfer",
-        "shortDescription": "Create and optimize content",
-        "longDescription": "Connect your Surfer workspace to plan articles, create outlines and writer-ready briefs, generate drafts, optimize existing content for SEO and AI Search, manage templates, and act on content recommendations.",
+        "shortDescription": "AI visibility and content",
+        "longDescription": "Track traditional and AI search visibility, create and optimize content, and act on daily recommendations from Surfer directly in ChatGPT and Codex. Automate your content workflow: find your best opportunities to fix content gaps, get an outreach list of sources most cited by LLMs, generate content briefs and full pages in your brand voice, auto-optimize existing content, and run custom reports. All of Surfer’s live data in one conversation, just a few simple prompts away.",
         "developerName": "Surfer",
         "category": "Productivity",
         "capabilities": [
