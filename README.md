@@ -50,23 +50,4 @@ Ask your assistant to use [`surfer-connect`](skills/surfer-connect/SKILL.md) for
 
 Try: “Create a Surfer outline for best trail running shoes. Stop after the outline.”
 
-## Releasing the plugin
-
-For local development, use Node.js 24.12 or newer, Git, and `tar`, then run `npm ci`.
-The packaging checker uses `yaml` as its only runtime npm dependency; TypeScript,
-Node types, and Prettier are development tools.
-The scripts read committed `HEAD`: commit package changes before running
-`npm run check:packaging` or `npm run build:plugin`. Run `npm run check` for
-TypeScript and formatting checks.
-
-Update `version` in `plugin.json` and merge the changes to `main`. From the updated
-`main`, push a matching version tag, such as `v0.1.0` for version `0.1.0`.
-GitHub Actions validates the skills and package, builds the ZIP, and publishes it
-as a GitHub Release asset with generated release notes. A mismatched tag fails
-the build. Tags with a prerelease suffix, such as `v0.2.0-beta.1`, publish a
-prerelease and do not replace the latest stable release.
-
-Pull requests and pushes to `main` also validate and build the plugin. Pushes to
-`main` keep a workflow artifact for verification.
-
 For account help, visit the [Surfer help center](https://docs.surferseo.com/). MIT licensed; see [LICENSE](LICENSE).
