@@ -1,4 +1,4 @@
-name: Validate skills
+name: Validate and package skills
 
 on:
   push:
@@ -8,6 +8,9 @@ on:
 env:
   # Pinned upstream validator. Bump deliberately.
   AGENTSKILLS_SHA: 69ef37e9424c0a7ea9dd2293b559e43ec8176379
+
+permissions:
+  contents: read
 
 jobs:
   validate:
@@ -29,3 +32,22 @@ jobs:
           done
       - name: Check metadata and licenses
         run: python scripts/check_packaging.py
+
+  build-plugin:
+    name: Plugin ZIP
+    needs: validate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Build plugin ZIP
+        run: python scripts/build_plugin.py
+      - name: Upload plugin ZIP
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@v7
+        with:
+          path: dist/*.zip
+          archive: false
+          if-no-files-found: error
