@@ -19,6 +19,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          cache: npm
+      - name: Install script dependencies
+        run: npm ci
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
@@ -32,7 +38,9 @@ jobs:
             skills-ref validate "$skill"
           done
       - name: Check plugin and skill packaging
-        run: python scripts/check_packaging.py
+        run: npm run check:packaging
+      - name: Check TypeScript and formatting
+        run: npm run check
 
   build-plugin:
     name: Plugin ZIP
@@ -42,19 +50,21 @@ jobs:
       artifact-id: ${{ steps.upload.outputs.artifact-id }}
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-node@v7
         with:
-          python-version: '3.12'
+          node-version: '24'
+          package-manager-cache: false
       - name: Check release tag matches plugin version
         if: startsWith(github.ref, 'refs/tags/')
         run: |
-          version="$(python -c 'import json; print(json.load(open("plugin.json"))["version"])')"
+          version="$(node -p 'require("./plugin.json").version')"
+
           if [[ "$GITHUB_REF_NAME" != "v$version" ]]; then
             echo "::error::Tag $GITHUB_REF_NAME must match plugin.json version v$version"
             exit 1
           fi
       - name: Build plugin ZIP
-        run: python scripts/build_plugin.py
+        run: npm run build:plugin
       - name: Upload plugin ZIP
         id: upload
         if: github.event_name == 'push'
@@ -84,7 +94,9 @@ jobs:
           GH_REPO: ${{ github.repository }}
         run: |
           flags=(--verify-tag --generate-notes)
+
           if [[ "${GITHUB_REF_NAME%%+*}" == *-* ]]; then
             flags+=(--prerelease --latest=false)
           fi
+
           gh release create "$GITHUB_REF_NAME" dist/*.zip "${flags[@]}"

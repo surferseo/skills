@@ -52,6 +52,11 @@ Try: “Create a Surfer outline for best trail running shoes. Stop after the out
 
 ## Releasing the plugin
 
+For local development, use Node.js 24.12 or newer and run `npm ci`.
+The scripts read committed `HEAD`: commit package changes before running
+`npm run check:packaging` or `npm run build:plugin`. Run `npm run check` for
+TypeScript and formatting checks.
+
 Update `version` in `plugin.json` and merge the changes to `main`. From the updated
 `main`, push a matching version tag, such as `v0.1.0` for version `0.1.0`.
 GitHub Actions validates the skills and package, builds the ZIP, and publishes it
