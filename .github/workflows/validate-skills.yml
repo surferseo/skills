@@ -1,13 +1,17 @@
-name: Validate skills
+name: Validate and package skills
 
 on:
   push:
     branches: [main]
+    tags: ['v*']
   pull_request:
 
 env:
   # Pinned upstream validator. Bump deliberately.
   AGENTSKILLS_SHA: 69ef37e9424c0a7ea9dd2293b559e43ec8176379
+
+permissions:
+  contents: read
 
 jobs:
   validate:
@@ -15,6 +19,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          cache: npm
+      - name: Install script dependencies
+        run: npm ci
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
@@ -27,5 +37,66 @@ jobs:
           for skill in skills/*/; do
             skills-ref validate "$skill"
           done
-      - name: Check metadata and licenses
-        run: python scripts/check_packaging.py
+      - name: Check plugin and skill packaging
+        run: npm run check:packaging
+      - name: Check TypeScript and formatting
+        run: npm run check
+
+  build-plugin:
+    name: Plugin ZIP
+    needs: validate
+    runs-on: ubuntu-latest
+    outputs:
+      artifact-id: ${{ steps.upload.outputs.artifact-id }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          package-manager-cache: false
+      - name: Check release tag matches plugin version
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          version="$(node -p 'require("./plugin.json").version')"
+
+          if [[ "$GITHUB_REF_NAME" != "v$version" ]]; then
+            echo "::error::Tag $GITHUB_REF_NAME must match plugin.json version v$version"
+            exit 1
+          fi
+      - name: Build plugin ZIP
+        run: npm run build:plugin
+      - name: Upload plugin ZIP
+        id: upload
+        if: github.event_name == 'push'
+        uses: actions/upload-artifact@v7
+        with:
+          path: dist/*.zip
+          archive: false
+          if-no-files-found: error
+
+  release:
+    name: Publish plugin release
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    needs: build-plugin
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download validated plugin ZIP
+        uses: actions/download-artifact@v8
+        with:
+          artifact-ids: ${{ needs.build-plugin.outputs.artifact-id }}
+          path: dist
+          skip-decompress: true
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          flags=(--verify-tag --generate-notes)
+
+          if [[ "${GITHUB_REF_NAME%%+*}" == *-* ]]; then
+            flags+=(--prerelease --latest=false)
+          fi
+
+          gh release create "$GITHUB_REF_NAME" dist/*.zip "${flags[@]}"

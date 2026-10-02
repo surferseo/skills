@@ -12,6 +12,11 @@ This repository is where the playbooks are maintained. The Surfer MCP server ser
 
 ## Install
 
+For ChatGPT and Codex plugins, download the versioned ZIP from the
+[latest release](https://github.com/surferseo/skills/releases/latest).
+It bundles the same `skills/` directory and the Surfer MCP connection in
+`mcp.json`.
+
 Use the [skills CLI](https://skills.sh) in your project:
 
 ```bash
