@@ -39,6 +39,7 @@
         ]
       },
       "review": {
+        "demo_recording_url": "https://drive.google.com/file/d/139GnTBGU1py_HeebbWHb1fdr5dGB6te4/view?usp=sharing",
         "commerce": false,
         "commerce_description": "Requires an existing Surfer account with MCP access. Usage counts toward the account's existing Surfer subscription and usage limits. This plugin does not offer subscription purchases, upgrades, or credit top-ups.",
         "test_cases": {
