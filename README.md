@@ -7,7 +7,7 @@ This repository is where the playbooks are maintained. The Surfer MCP server ser
 ## Requirements
 
 - A Surfer account on a plan that includes MCP: Pro, Peace of Mind, Enterprise, or AI Search Analytics. The MCP tab in the app shows whether yours does.
-- Creating a Content Editor, opening a recommendation, generating an AI article, and running Auto-Optimize consume Surfer credits. Reading data does not. See [credits and limits](https://devs.surferseo.com/mcp/credits-and-limits).
+- Creating a Content Editor, opening a recommendation, and generating an AI article consume Surfer credits. Running Auto-Optimize counts toward the Auto-Optimize allowance under the fair usage policy. Reading data costs nothing. See [credits and limits](https://devs.surferseo.com/mcp/credits-and-limits).
 - For the install command below, Node.js 22.20 or newer.
 
 ## Install
