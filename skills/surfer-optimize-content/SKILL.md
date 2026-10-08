@@ -81,8 +81,8 @@ and state. Never poll indefinitely.
 5. **Choose an optimization path**, and ask when the user has no preference.
    - Call `auto_optimize__run` once per requested pass; it edits the document directly. Poll
      `auto_optimize__get` by the returned job id, or resume polling when continuing a known run.
-     Each accepted start spends a credit and can cancel an earlier run, so do not automatically
-     repeat a start whose response was lost. If no job id is available, report the outcome as unknown
+     Each accepted start counts toward the Auto-Optimize allowance and can cancel an earlier run,
+     so do not automatically repeat a start whose response was lost. If no job id is available, report the outcome as unknown
      and stop. A `completed` job has a result of `optimized` or `nothing_to_optimize`. Stop on a
      `failed` state or a quota error.
    - A guided edit revises the draft against the selected guidelines, without keyword stuffing or
