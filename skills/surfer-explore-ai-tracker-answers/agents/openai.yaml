@@ -1,0 +1,11 @@
+interface:
+  display_name: "Explore Surfer AI Tracker Answers"
+  short_description: "See what AI models say about your brand"
+  default_prompt: "Use $surfer-explore-ai-tracker-answers to find out what AI models say about [brand or topic]."
+dependencies:
+  tools:
+    - type: mcp
+      value: surfer
+      description: Surfer MCP server for AI Tracker projects, answers, brands, and sources
+      transport: streamable_http
+      url: https://mcp.surferseo.com/mcp
