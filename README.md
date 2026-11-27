@@ -1,13 +1,13 @@
 # Surfer Skills
 
-Skills for using [Surfer](https://surferseo.com) in your AI assistant: write and optimize articles, create outlines and briefs, manage templates, and act on content recommendations. Connect through [Surfer MCP](https://devs.surferseo.com/mcp/overview).
+Skills for using [Surfer](https://surferseo.com) in your AI assistant: write and optimize articles, create outlines and briefs, manage templates, act on content recommendations, and set up AI Tracker. Connect through [Surfer MCP](https://devs.surferseo.com/mcp/overview).
 
 This repository is where the playbooks are maintained. The Surfer MCP server serves the same skills to every connected assistant, so a change merged here reaches the server as well. Install from here when your client does not read server-shipped skills, or when you want a pinned local copy.
 
 ## Requirements
 
 - A Surfer account on a plan that includes MCP: Pro, Peace of Mind, Enterprise, or AI Search Analytics. The MCP tab in the app shows whether yours does.
-- Creating a Content Editor and opening a recommendation consume Surfer credits. Enterprise and some older plans also consume an AI Article credit when generating an article; other plans include AI Articles in the Content Editor. Running Auto-Optimize counts toward your plan's Auto-Optimize allowance. Reading data costs nothing. See [credits and limits](https://devs.surferseo.com/mcp/credits-and-limits).
+- Creating a Content Editor and opening a recommendation consume Surfer credits. Enterprise and some older plans also consume an AI Article credit when generating an article; other plans include AI Articles in the Content Editor. Running Auto-Optimize counts toward your plan's Auto-Optimize allowance. Creating an AI Tracker project spends your organization's AI Tracker prompt quota, one per prompt. Reading data costs nothing. See [credits and limits](https://devs.surferseo.com/mcp/credits-and-limits).
 - For the install command below, Node.js 22.20 or newer.
 
 ## Install
@@ -46,6 +46,7 @@ Ask your assistant to use [`surfer-connect`](skills/surfer-connect/SKILL.md) for
 | `surfer-create-content-brief` | Prepare a writer-ready content brief |
 | `surfer-manage-content-templates` | Manage reusable content templates |
 | `surfer-content-recommendations` | Act on site recommendations |
+| `surfer-setup-ai-tracker` | Set up AI Tracker for a brand |
 | `surfer-connect` | Set up and verify your connection |
 
 Try: “Create a Surfer outline for best trail running shoes. Stop after the outline.”
