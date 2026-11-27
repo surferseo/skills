@@ -83,4 +83,5 @@ list.
 
 6. **Report.** Return the workspace and project ids, the number of prompts tracked, and that the
    first report is running and refreshes daily. Its progress is on `ai_tracker__get`
-   (`latest_run_status`); results appear in the AI Tracker report tools once it completes.
+   (`latest_run_status`); results appear in the AI Tracker report tools once it completes. To
+   explore what the models said in their answers, use `surfer-explore-ai-tracker-answers`.
