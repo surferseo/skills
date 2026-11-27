@@ -1,6 +1,6 @@
 # Surfer Skills
 
-Skills for using [Surfer](https://surferseo.com) in your AI assistant: write and optimize articles, create outlines and briefs, manage templates, act on content recommendations, and set up AI Tracker. Connect through [Surfer MCP](https://devs.surferseo.com/mcp/overview).
+Skills for using [Surfer](https://surferseo.com) in your AI assistant: write and optimize articles, create outlines and briefs, manage templates, act on content recommendations, set up AI Tracker, and explore its AI answers. Connect through [Surfer MCP](https://devs.surferseo.com/mcp/overview).
 
 This repository is where the playbooks are maintained. The Surfer MCP server serves the same skills to every connected assistant, so a change merged here reaches the server as well. Install from here when your client does not read server-shipped skills, or when you want a pinned local copy.
 
@@ -47,6 +47,7 @@ Ask your assistant to use [`surfer-connect`](skills/surfer-connect/SKILL.md) for
 | `surfer-manage-content-templates` | Manage reusable content templates |
 | `surfer-content-recommendations` | Act on site recommendations |
 | `surfer-setup-ai-tracker` | Set up AI Tracker for a brand |
+| `surfer-explore-ai-tracker-answers` | Explore what AI models say in AI Tracker answers |
 | `surfer-connect` | Set up and verify your connection |
 
 Try: “Create a Surfer outline for best trail running shoes. Stop after the outline.”
